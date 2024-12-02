@@ -8,6 +8,11 @@
   </head>
   <body class="size-full">
     <div id="root" class="size-full"></div>
+    <script>
+      const theme =
+        JSON.parse(localStorage.getItem("settings"))?.theme || "light";
+      window.document.body.classList.add(theme);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
