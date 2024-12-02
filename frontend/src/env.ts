@@ -1,6 +1,8 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+console.log(parseInt(import.meta.env.VITE_CANVAS_HEIGHT));
+
 export const env = createEnv({
   isServer: false,
 
@@ -11,8 +13,10 @@ export const env = createEnv({
   clientPrefix: "VITE_",
 
   client: {
-    VITE_FRONTEND_URL: z.string().url(),
-    VITE_BACKEND_URL: z.string().url(),
+    VITE_HOST: z.string(),
+    VITE_PORT: z.number(),
+    VITE_DEV_PORT: z.number(),
+    VITE_URL: z.string().url(),
     VITE_CANVAS_HEIGHT: z.number(),
     VITE_CANVAS_WIDTH: z.number(),
   },
@@ -22,7 +26,12 @@ export const env = createEnv({
    * `process.env` or `import.meta.env`.
    */
   runtimeEnv: {
-    ...import.meta.env,
+    VITE_HOST: import.meta.env.VITE_HOST,
+    VITE_PORT: parseInt(import.meta.env.VITE_PORT),
+    VITE_DEV_PORT: 5173,
+    VITE_URL: `http://${import.meta.env.VITE_HOST}:${
+      import.meta.env.VITE_PORT
+    }`,
     VITE_CANVAS_HEIGHT: parseInt(import.meta.env.VITE_CANVAS_HEIGHT),
     VITE_CANVAS_WIDTH: parseInt(import.meta.env.VITE_CANVAS_WIDTH),
   },
