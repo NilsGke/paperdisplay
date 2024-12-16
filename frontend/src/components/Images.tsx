@@ -39,7 +39,7 @@ export default function Images() {
         >
           <img
             className="w-auto h-32 rounded"
-            src={`${env.VITE_URL}/api/images/${imageName}`}
+            src={`/api/images/${imageName}`}
             alt={`your image: ${imageName}`}
             height={env.VITE_CANVAS_HEIGHT}
             width={env.VITE_CANVAS_WIDTH}
