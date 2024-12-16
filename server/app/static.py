@@ -3,7 +3,7 @@ from flask import Blueprint, abort, send_from_directory
 
 static = Blueprint("static", __name__)
 
-STATIC_DIR = os.path.join(os.getcwd(), "frontend")
+STATIC_DIR = os.path.join(os.getcwd(), "..", "frontend")
 
 ALLOWED_EXTENSIONS = {"html", "css", "js", "svg"}
 

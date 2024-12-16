@@ -4,8 +4,8 @@ from flask import Blueprint, jsonify, abort, request, send_from_directory, Respo
 
 api = Blueprint("api", __name__)
 
-IMAGES_DIR = os.path.join(os.getcwd(), "../images")
-DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../display/draw.py")
+IMAGES_DIR = os.path.join(os.getcwd(), "../../images")
+DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.py")
 
 
 @api.route('/images', methods=["GET"])
@@ -37,8 +37,6 @@ def get_image(filename):
 @api.route("/setImage/<filename>", methods=["POST"])
 def set_image(filename):
 
-    # Define the path to the external script
-    script_path = '../display/draw.py'
     try:
         # Check if the file exists in the directory
         if filename not in os.listdir(IMAGES_DIR):
