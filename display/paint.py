@@ -8,9 +8,6 @@ from PIL import Image, ImageDraw
 
 
 
-
-
-
 def drawbmp(filename):
 	if(len(filename) == 0):
 		print("no filename provided");
@@ -20,16 +17,11 @@ def drawbmp(filename):
 	epd.init()
 	image = Image.new("1", (epd.width, epd.height), 255) # 255: clear the frame
 	draw = ImageDraw.Draw(image)
-	bmp = Image.open(os.path.join("../images", filename))
+	bmp = Image.open(os.path.join("../../images", filename))
 	image.paste(bmp, (0, 0))
 	epd.display(epd.getbuffer(image))
 	epd.sleep()
 	exit()
-
-
-
-
-
 
 
 
