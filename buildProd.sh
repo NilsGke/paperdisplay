@@ -49,12 +49,12 @@ cp -r "$FRONTEND_DIR/dist/" "$DEPLOY_FRONTEND_DIR"
 # Step 5: Copy backend to deploy directory
 echo "Copying server files..."
 mkdir -p "$DEPLOY_SERVER_DIR"
-rsync -a --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" "$SERVER_DIR/" "$DEPLOY_SERVER_DIR"
+rsync -a --exclude="**/__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" "$SERVER_DIR/" "$DEPLOY_SERVER_DIR"
 
 # copy display files to dist
 echo "Copying display files..."
 mkdir -p "$DEPLOY_DISPLAY_DIR"
-rsync -a --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" "$DISPLAY_DIR/" "$DISPLAY_SERVER_DIR"
+rsync -a --exclude="**/__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" --exclude '.DS_Store' "$DISPLAY_DIR/" "$DEPLOY_DISPLAY_DIR"
 
 # copy contents of misc into root of dist folder
 echo "Copying misc files..."
@@ -72,7 +72,7 @@ if [[ "$SEND_TO_PI" =~ ^[Yy]$ ]]; then
     echo "Ensuring target directory exists on Raspberry Pi..."
     ssh "$RASPBERRY_PI_USER@$RASPBERRY_PI_HOST" "mkdir -p $RASPBERRY_PI_PATH"
     echo "Sending deployment folder to Raspberry Pi..."
-    rsync -avz --delete --exclude="$SERVER_DIR/venv/" --exclude='venv/' "$DEPLOY_DIR/" "$RASPBERRY_PI_USER@$RASPBERRY_PI_HOST:$RASPBERRY_PI_PATH/"
+    rsync -avz --delete --exclude "**/__pycache__" --exclude="$SERVER_DIR/venv/" --exclude='venv/' "$DEPLOY_DIR/" "$RASPBERRY_PI_USER@$RASPBERRY_PI_HOST:$RASPBERRY_PI_PATH/"
     
     if [ $? -eq 0 ]; then
         echo "Deployment folder successfully sent to $RASPBERRY_PI_USER@$RASPBERRY_PI_HOST:$RASPBERRY_PI_PATH"
