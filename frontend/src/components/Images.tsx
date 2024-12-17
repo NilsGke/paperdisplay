@@ -13,6 +13,8 @@ export default function Images() {
     queryKey: ["images"],
     queryFn: async () => {
       const res = await fetch(`/api/images`);
+      console.log(res);
+      if (!res.ok) throw new Error("cannot load images:\n" + res.statusText);
       const data = await res.json();
       return z.array(z.string()).parse(data);
     },
