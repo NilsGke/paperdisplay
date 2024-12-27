@@ -20,8 +20,10 @@ jobs:
 
       - name: Build frontend
         run: |
+          cd frontend
           bun install
           bun build
+          cd ..
 
       - name: Create deployment directory structure
         run: |
