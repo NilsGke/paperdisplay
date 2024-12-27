@@ -22,7 +22,7 @@ jobs:
         run: |
           cd frontend
           bun install
-          bun build
+          bun run build
           cd ..
 
       - name: Create deployment directory structure
