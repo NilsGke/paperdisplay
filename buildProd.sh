@@ -60,6 +60,9 @@ rsync -a --exclude="**/__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclud
 echo "Copying misc files..."
 cp -r "$MISC_DIR/"* "$DEPLOY_DIR/"
 
+echo "Copying version"
+cp version.txt "$DEPLOY_DIR/"
+
 # Step 6: Add .env.pi file to dist, because raspberrypi uses it
 echo "Adding .env file..."
 cp ".env.production" "$DEPLOY_DIR/.env.production"

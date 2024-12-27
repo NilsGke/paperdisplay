@@ -1,0 +1,64 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - version.txt
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build frontend
+        run: |
+          bun install
+          bun build
+
+      - name: Create deployment directory structure
+        run: |
+          mkdir -p dist/frontend
+          mkdir -p dist/server
+          mkdir -p dist/display
+
+      - name: Copy frontend build files
+        run: |
+          cp -r frontend/dist/ dist/frontend/
+
+      - name: Copy server files
+        run: |
+          rsync -a --exclude="**/__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" server/ dist/server
+
+      - name: Copy display files
+        run: |
+          rsync -a --exclude="**/__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".env" --exclude="venv/" --exclude='.DS_Store' display/ dist/display
+
+      - name: Copy misc files
+        run: |
+          cp -r misc/* dist/
+
+      - name: Copy version
+        run: |
+          cp version.txt dist/version.txt
+
+      - name: Add .env file
+        run: |
+          cp .env.production dist/.env.production
+
+      - name: Archive deployment folder
+        run: |
+          tar -czf dist.tar.gz dist
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: deployment
+          path: dist.tar.gz
