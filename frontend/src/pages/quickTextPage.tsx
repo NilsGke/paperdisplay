@@ -1,8 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { env } from "@/env";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import monochrome from "@/helpers/monochrome";
+import {
+  BlendingModeIcon,
+  PaperPlaneIcon,
+  TransparencyGridIcon,
+} from "@radix-ui/react-icons";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
@@ -10,7 +21,10 @@ import { toast } from "react-toastify";
 export default function QuickTextPage() {
   const [text, setText] = useState("");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [invert, setInvert] = useState(false);
+  const [dithering, setDithering] = useState(false);
 
+  // draw to canvas
   useEffect(() => {
     // mostly ai generated
     const canvas = canvasRef.current;
@@ -18,11 +32,11 @@ export default function QuickTextPage() {
       throw new Error("Canvas is not available");
     }
 
-    const context = canvas.getContext("2d");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) throw new Error("Failed to get 2D context");
 
     // Clear the canvas
-    context.fillStyle = "white";
+    context.fillStyle = invert ? "black" : "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     const maxWidth = canvas.width * 0.8; // 80% of canvas width
@@ -33,7 +47,7 @@ export default function QuickTextPage() {
     let fontSize = 80; // Start with an initial font size
     const minFontSize = 10; // Prevent font size from becoming too small
     context.textAlign = "center"; // Center horizontally
-    context.fillStyle = "black";
+    context.fillStyle = invert ? "white" : "black";
 
     const lines: string[] = [];
     let lineHeight = 10;
@@ -77,7 +91,13 @@ export default function QuickTextPage() {
       context.fillText(lines[i], x, offsetY);
       offsetY += lineHeight;
     }
-  }, [text]);
+
+    if (dithering) {
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      const dithered = monochrome(imageData, 0.5, "floydsteinberg");
+      context.putImageData(dithered, 0, 0);
+    }
+  }, [invert, text, dithering]);
 
   const { mutate } = useMutation({
     mutationFn: async (file: File) => {
@@ -122,19 +142,57 @@ export default function QuickTextPage() {
           <CardTitle>Quick Text</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-rows-[repeat(auto,2] gap-4">
-          <Textarea
-            autoFocus
-            placeholder="type your text here…"
-            className="w-full resize-none"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
+          <div className="flex gap-2">
+            <Textarea
+              autoFocus
+              placeholder="type your text here…"
+              className="w-full resize-none"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+
+            <ToggleGroup
+              variant="outline"
+              type="multiple"
+              className="flex flex-col gap-2"
+              value={[
+                invert ? "invert" : undefined,
+                dithering ? "dithering" : undefined,
+              ].filter((s) => s !== undefined)}
+              onValueChange={(selected: ("invert" | "dithering")[]) => {
+                setInvert(selected.includes("invert"));
+                setDithering(selected.includes("dithering"));
+              }}
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem value="invert">
+                    <BlendingModeIcon />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>invert image</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem value="dithering">
+                    <TransparencyGridIcon />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>apply dithering</p>
+                </TooltipContent>
+              </Tooltip>
+            </ToggleGroup>
+          </div>
           <div>
             <canvas
               height={env.VITE_CANVAS_HEIGHT}
               width={env.VITE_CANVAS_WIDTH}
               ref={canvasRef}
-              className="w-full h-auto bg-white rounded outline outline-zinc-200 dark:outline-zinc-800"
+              className="w-full h-auto bg-white rounded outline outline-1 outline-zinc-200 dark:outline-zinc-800"
             />
           </div>
           <Button onClick={submit}>
