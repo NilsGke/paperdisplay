@@ -20,26 +20,40 @@ The frontend is a React + TypeScript + Vite project.
 
 the script `buildProd.sh` builds the frontend, copies it, the server and the display directories to dist and copies everything from the misc directory to the root of the dist folder.
 
-## installation on a raspberrypi
+## raspberrypi (on raspberry pi)
+
+### 1. Download and install project and dependencies
 
 ```bash
-# TODO: add github workflow to package release and add link to download to pi
+# download and unpack release
+mkdir paperdisplay
+mkdir images
+cd paperdisplay
+curl -L "https://github.com/NilsGke/paperdisplay/releases/latest/download/dist.tar.gz" -o dist.tar.gz # download
+tar -xzf dist.tar.gz # unpack
+mv -v dist/* ./ # move project to current directory
+rm -r dist dist.tar.gz # cleanup
 
-# install dependencies if not already installed
+# install dependencies for display
 sudo apt update
 sudo apt install libjpeg-dev zlib1g-dev
 sudo apt-get install python3-pil
 sudo apt install python3-gpiozero
 pip3 install pigpio
-# (CHECK IF THESE IS RELEVANT)
-
 pip3 install spidev
 pip3 install gpiozero
+# (TODO: CHECK IF ALL OF THEM ARE RELEVANT)
 
-pip3 install -r requirements.txt
+# setup python server
+cd server
+python3 -m venv venv # create python virtual env
+source venv/bin/activate # activate venv
+pip3 install -r requirements.txt # install dependencies
+deactivate # deactivate venv
+cd ..
 ```
 
-### Enable SPI
+### 2. Enable SPI
 
 Open the Raspberry Pi configuration tool:
 
@@ -52,6 +66,35 @@ Reboot your Raspberry Pi to apply the changes:
 
 ```bash
 sudo reboot
+```
+
+## Run the Project
+
+To start the server just run the `./start.sh` file in the root of the project.
+
+```bash
+./start.sh
+```
+
+You might need to update the permissions.
+
+```bash
+chmod +x ./start.sh
+```
+
+## Update
+
+If there is a new version available, the frontend will show a banner on the start page.
+To update the project, run the `./update.sh` shell script.
+
+```bash
+./update.sh
+```
+
+You might need to update the permissions.
+
+```bash
+chmod +x ./update.sh
 ```
 
 ## development
@@ -70,5 +113,5 @@ cd ..
 cd backend
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -r requirements.txt # installing requirements might take a while, especially on a pi zero
+pip3 install -r requirements.txt
 ```

@@ -35,7 +35,7 @@ jobs:
 
       - name: Copy frontend build files
         run: |
-          cp -r frontend/dist/ dist/frontend/
+          cp -r frontend/dist/* dist/frontend/
 
       - name: Copy server files
         run: |
