@@ -1,11 +1,13 @@
 import os
 import subprocess
-from flask import Blueprint, jsonify, abort, request, send_from_directory, Response
+from flask import Blueprint, jsonify, abort, request, send_from_directory
+from werkzeug.utils import secure_filename
 
 api = Blueprint("api", __name__)
 
 IMAGES_DIR = os.path.join(os.getcwd(), "../../images")
 DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.py")
+ALLOWED_EXTENSIONS = ["bmp"]
 
 
 @api.route('/images', methods=["GET"])
@@ -19,7 +21,6 @@ def get_filenames():
         return jsonify({"error": str(e)}), 500
 
 
-
 @api.route("/images/<filename>", methods=["GET"])
 def get_image(filename):
     try:
@@ -31,7 +32,6 @@ def get_image(filename):
         return send_from_directory(IMAGES_DIR, filename)
     except Exception as e:
         abort(500, description=f"Error serving the image: {e}")
-
 
 
 @api.route("/setImage/<filename>", methods=["POST"])
@@ -58,8 +58,55 @@ def set_image(filename):
             # Handle errors from the external script
             return jsonify({'error': 'Error drawing image', 'details': e.stderr}), 500
         
-        
-        return Response("ok", 200)
     except Exception as e:
         print(e)
         abort(500, description=e)
+       
+        
+@api.route("/addImage", methods=["POST"])       
+def upload_image():
+    if 'file' not in request.files:
+        abort(400, description="you did not provide a file")
+        return
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        abort(400, description="you did not provide a file")
+        return
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        
+        if filename == "temp.bmp":
+            abort(400, description="filename not allowed")
+            
+        # TODO: check if file with that name exists
+        
+        file.save(os.path.join(IMAGES_DIR, filename))
+        return jsonify(success=True)
+      
+
+@api.route("/previewImage", methods=["POST"])
+def preview_image():
+    if 'file' not in request.files:
+        abort(400, description="you did not provide a file")
+        return
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        abort(400, description="you did not provide a file")
+        return
+    
+    file.save(os.path.join(IMAGES_DIR, "temp.bmp"))
+    set_image("temp.bmp")
+    os.remove(os.path.join(IMAGES_DIR, "temp.bmp"))
+    
+    return jsonify(success=True)
+        
+        
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

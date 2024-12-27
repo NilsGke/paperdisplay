@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 /** settings schema to validate and provide typesafety */
@@ -31,7 +32,7 @@ export const getSettings = () => {
   }
 };
 
-export const storeSettings = (settings: SettingsType) =>
+const storeSettings = (settings: SettingsType) =>
   localStorage.setItem("settings", JSON.stringify(settings));
 
 export const changeSetting = (settings: Partial<SettingsType>) => {
@@ -46,4 +47,26 @@ export const changeSetting = (settings: Partial<SettingsType>) => {
     }
   }
   storeSettings(newSettings);
+  eventTarget.dispatchEvent(new Event("change"));
+};
+
+const eventTarget = new EventTarget();
+
+export const useSettings = () => {
+  const [settings, setSettings] = useState(getSettings());
+
+  useEffect(() => {
+    const listener = () => {
+      const newSettings = getSettings();
+      setSettings(newSettings);
+      if (newSettings.theme === "light")
+        window.document.body.classList.remove("dark");
+      else window.document.body.classList.add("dark");
+    };
+
+    eventTarget.addEventListener("change", listener);
+    return () => eventTarget.removeEventListener("change", listener);
+  }, [settings]);
+
+  return [settings, changeSetting] as const;
 };

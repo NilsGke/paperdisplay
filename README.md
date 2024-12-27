@@ -28,8 +28,30 @@ the script `buildProd.sh` builds the frontend, copies it, the server and the dis
 # install dependencies if not already installed
 sudo apt update
 sudo apt install libjpeg-dev zlib1g-dev
+sudo apt-get install python3-pil
+sudo apt install python3-gpiozero
+pip3 install pigpio
+# (CHECK IF THESE IS RELEVANT)
+
+pip3 install spidev
+pip3 install gpiozero
 
 pip3 install -r requirements.txt
+```
+
+### Enable SPI
+
+Open the Raspberry Pi configuration tool:
+
+```bash
+sudo raspi-config
+```
+
+Navigate to Interface Options → SPI and enable it.
+Reboot your Raspberry Pi to apply the changes:
+
+```bash
+sudo reboot
 ```
 
 ## development

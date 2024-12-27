@@ -1,8 +1,6 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-console.log(parseInt(import.meta.env.VITE_CANVAS_HEIGHT));
-
 export const env = createEnv({
   isServer: false,
 

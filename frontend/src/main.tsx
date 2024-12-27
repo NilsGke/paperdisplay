@@ -2,11 +2,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import "./index.css";
-import RootPage from "./routes";
+import RootPage from "./pages/indexPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getSettings } from "./lib/settings";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/ReactToastify.min.css";
+import EditorPage from "./pages/editorPage";
+import Layout from "./components/Layout";
+import AddImagePage from "./pages/addImagePage";
+import QuickTextPage from "./pages/quickTextPage";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +25,12 @@ createRoot(document.getElementById("root")!).render(
       <ToastContainer />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<RootPage />} />
+          <Route element={<Layout />}>
+            <Route index path="/" element={<RootPage />} />
+            <Route path="/editImage" element={<EditorPage />} />
+            <Route path="/addImage" element={<AddImagePage />} />
+            <Route path="/quickText" element={<QuickTextPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

@@ -3,6 +3,10 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "react-toastify";
+import { Link } from "react-router";
+import { twMerge } from "tailwind-merge";
+import { buttonVariants } from "./ui/button";
+import { PlusCircledIcon } from "@radix-ui/react-icons";
 
 export default function Images() {
   const {
@@ -13,7 +17,6 @@ export default function Images() {
     queryKey: ["images"],
     queryFn: async () => {
       const res = await fetch(`/api/images`);
-      console.log(res);
       if (!res.ok) throw new Error("cannot load images:\n" + res.statusText);
       const data = await res.json();
       return z.array(z.string()).parse(data);
@@ -32,7 +35,7 @@ export default function Images() {
   });
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap items-center justify-center gap-6">
       {isLoading && (
         <div className="text-zinc-400 animate-pulse">Loading...</div>
       )}
@@ -45,10 +48,10 @@ export default function Images() {
 
       {images?.map((imageName) => {
         return (
-          <div>
+          <div key={imageName}>
             <button
               className={cn(
-                "flex flex-col items-center gap-1 rounded shadow active:brightness-90",
+                "flex flex-col items-center gap-1 rounded shadow-lg outline outline-1 outline-zinc-100 active:brightness-90",
                 isPending &&
                   pendingImageName === imageName &&
                   "animate-pulse brightness-75"
@@ -70,6 +73,16 @@ export default function Images() {
           </div>
         );
       })}
+
+      <Link
+        to="/addImage"
+        className={twMerge(
+          buttonVariants({ variant: "outline" }),
+          "p-4 transition border border-dashed"
+        )}
+      >
+        <PlusCircledIcon /> add Image
+      </Link>
     </div>
   );
 }
