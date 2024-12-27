@@ -64,3 +64,15 @@ jobs:
         with:
           name: deployment
           path: dist.tar.gz
+
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+
+        with:
+          name: ${{ env.VERSION }}
+          tag: ${{ env.VERSION }}
+          artifacts: "dist.tar.gz"
