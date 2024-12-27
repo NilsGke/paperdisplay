@@ -58,7 +58,7 @@ jobs:
           tar -czf dist.tar.gz dist
 
       - name: Upload deployment artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: deployment
           path: dist.tar.gz
