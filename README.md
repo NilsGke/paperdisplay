@@ -22,7 +22,17 @@ the script `buildProd.sh` builds the frontend, copies it, the server and the dis
 
 ## raspberrypi (on raspberry pi)
 
-### 1. Download and install project and dependencies
+### Install Script
+
+Run this command in the root of your pi. It will create two folders, `/images` and `/paperdisplay`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NilsGke/paperdisplay/refs/heads/main/misc/install.sh | bash
+```
+
+### manual installation
+
+#### 1. Download and install project and dependencies
 
 ```bash
 # download and unpack release
@@ -53,7 +63,7 @@ deactivate # deactivate venv
 cd ..
 ```
 
-### 2. Enable SPI
+#### 2. Enable SPI
 
 Open the Raspberry Pi configuration tool:
 
