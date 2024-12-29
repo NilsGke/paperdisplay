@@ -55,8 +55,10 @@ export default function Layout() {
 
         <div className="flex items-center justify-center gap-2 text-zinc-500">
           <Tooltip>
-            <TooltipContent>Change Theme</TooltipContent>
-            <TooltipTrigger>
+            <TooltipContent>
+              <p>Change Theme</p>
+            </TooltipContent>
+            <TooltipTrigger asChild>
               <button
                 className={buttonVariants({ variant: "link" })}
                 onClick={() =>

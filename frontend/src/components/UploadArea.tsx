@@ -5,17 +5,28 @@ import { PlusCircledIcon, Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 export default function UplaodArea() {
   const [file, setFile] = useState<File | null>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState("");
 
+  const navigate = useNavigate();
+
   const { mutate } = useMutation({
     mutationFn: async () => {
       if (file === null) throw Error("no file selected");
       const data = new FormData();
-      data.append("file", file);
+
+      data.append(
+        "file",
+        new File([file], filename, {
+          // necessary because here we can change the filename
+          type: file.type,
+          lastModified: file.lastModified,
+        })
+      );
       data.append("user", "hubot");
       return fetch("/api/addImage", {
         method: "POST",
@@ -23,9 +34,10 @@ export default function UplaodArea() {
       });
     },
     onSuccess: async (response) => {
-      if (response.status === 200)
+      if (response.status === 200) {
+        navigate("/");
         return toast.success("successfully uploaded image!");
-      else {
+      } else {
         toast.error(response.statusText);
         toast.error(await response.text());
       }

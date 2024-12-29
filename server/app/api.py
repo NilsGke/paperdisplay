@@ -1,6 +1,6 @@
 import os
 import subprocess
-from flask import Blueprint, jsonify, abort, make_response, request, send_from_directory
+from flask import Blueprint, jsonify, make_response, request, send_from_directory
 from werkzeug.utils import secure_filename
 
 api = Blueprint("api", __name__)
@@ -33,12 +33,12 @@ def get_image(filename):
     try:
         # Check if the file exists in the directory
         if filename not in os.listdir(IMAGES_DIR):
-            abort(404, description="Image not found")
+            return "Image not found", 404
         
         # Serve the file
         return send_from_directory(IMAGES_DIR, filename)
     except Exception as e:
-        abort(500, description=f"Error serving the image: {e}")
+        return f"Error serving the image: {e}", 500
 
 
 @api.route("/setImage/<filename>", methods=["POST"])
@@ -47,7 +47,7 @@ def set_image(filename):
     try:
         # Check if the file exists in the directory
         if filename not in os.listdir(IMAGES_DIR):
-            abort(404, description="Image not found")
+            return "Image not found", 404
         
         
         try:
@@ -67,44 +67,56 @@ def set_image(filename):
         
     except Exception as e:
         print(e)
-        abort(500, description=e)
+        return e, 400
        
         
 @api.route("/addImage", methods=["POST"])       
 def upload_image():
     if 'file' not in request.files:
-        abort(400, description="you did not provide a file")
-        return
+        return "you did not provide a file", 400
     
     file = request.files['file']
     
     if file.filename == '':
-        abort(400, description="you did not provide a file")
-        return
+        return "you did not provide a file", 400
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         
         if filename == "temp.bmp":
-            abort(400, description="filename not allowed")
+            return "filename not allowed", 400
             
-        # TODO: check if file with that name exists
+        print(os.listdir(IMAGES_DIR))
+            
+        if filename in os.listdir(IMAGES_DIR):
+            return "filename already exists", 400
         
         file.save(os.path.join(IMAGES_DIR, filename))
         return jsonify(success=True)
-      
+
+
+@api.route("removeImage/<filename>", methods=["POST"])
+def remove_image(filename):
+    filename = secure_filename(filename)
+    
+    if filename not in os.listdir(IMAGES_DIR):
+        return "Image not found", 404
+    
+    os.remove(os.path.join(IMAGES_DIR, filename))
+    
+    return make_response("ok", 200)
+
+
 
 @api.route("/previewImage", methods=["POST"])
 def preview_image():
     if 'file' not in request.files:
-        abort(400, description="you did not provide a file")
-        return
+        return "you did not provide a file", 400
     
     file = request.files['file']
     
     if file.filename == '':
-        abort(400, description="you did not provide a file")
-        return
+        return "you did not provide a file", 400
     
     file.save(os.path.join(IMAGES_DIR, "temp.bmp"))
     set_image("temp.bmp")

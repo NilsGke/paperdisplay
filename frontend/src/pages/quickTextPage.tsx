@@ -47,7 +47,8 @@ export default function QuickTextPage() {
     let fontSize = 80; // Start with an initial font size
     const minFontSize = 10; // Prevent font size from becoming too small
     context.textAlign = "center"; // Center horizontally
-    context.fillStyle = invert ? "white" : "black";
+    context.fillStyle =
+      text.length > 0 ? (invert ? "white" : "black") : invert ? "#333" : "#ddd";
 
     const lines: string[] = [];
     let lineHeight = 10;
@@ -57,7 +58,7 @@ export default function QuickTextPage() {
       context.font = `${fontSize}px Arial`;
       lineHeight = fontSize * lineHeightRatio;
 
-      const textLines = text.split("\n"); // Split into explicit new lines
+      const textLines = (text.length === 0 ? "preview" : text).split("\n"); // Split into explicit new lines
       lines.length = 0; // Clear previous lines
       for (const textLine of textLines) {
         const words = textLine.split(" ");
@@ -104,14 +105,21 @@ export default function QuickTextPage() {
       const data = new FormData();
       data.append("file", file);
 
-      const res = await fetch("/api/previewImage", {
+      const promise = fetch("/api/previewImage", {
         method: "POST",
         body: data,
+      }).then((res) => {
+        if (!res.ok) throw Error(res.statusText);
+        return res;
       });
 
-      if (!res.ok) throw Error(res.statusText);
+      toast.promise(promise, {
+        pending: "applying image",
+        success: "Done!",
+        error: "Error!",
+      });
     },
-    onSuccess: () => toast.success("successfully applied image!"),
+
     onError: (error) => {
       toast.error(error.message);
       console.error(error);
