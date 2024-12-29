@@ -7,11 +7,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getSettings } from "./lib/settings";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/ReactToastify.min.css";
-import EditorPage from "./pages/editorPage";
 import Layout from "./components/Layout";
 import AddImagePage from "./pages/addImagePage";
 import QuickTextPage from "./pages/quickTextPage";
 import { TooltipProvider } from "./components/ui/tooltip";
+import ServerLogsPage from "./pages/serverLogsPage";
 
 const queryClient = new QueryClient();
 
@@ -29,9 +29,9 @@ createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route element={<Layout />}>
               <Route index path="/" element={<RootPage />} />
-              <Route path="/editImage" element={<EditorPage />} />
               <Route path="/addImage" element={<AddImagePage />} />
               <Route path="/quickText" element={<QuickTextPage />} />
+              <Route path="/serverLogs" element={<ServerLogsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

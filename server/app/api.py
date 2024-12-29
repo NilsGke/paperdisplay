@@ -1,6 +1,6 @@
 import os
 import subprocess
-from flask import Blueprint, jsonify, abort, request, send_from_directory
+from flask import Blueprint, jsonify, abort, make_response, request, send_from_directory
 from werkzeug.utils import secure_filename
 
 api = Blueprint("api", __name__)
@@ -8,7 +8,9 @@ api = Blueprint("api", __name__)
 IMAGES_DIR = os.path.join(os.getcwd(), "../../images")
 DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.py")
 ALLOWED_EXTENSIONS = ["bmp"]
+LOG_FILE = os.path.join(os.getcwd(), "../log.txt")
 
+print(os.getcwd())
 
 @api.route('/images', methods=["GET"])
 def get_filenames():
@@ -106,6 +108,16 @@ def preview_image():
     return jsonify(success=True)
         
         
+        
+@api.route("/logs", methods=["GET"])
+def get_logs():
+    file = open(LOG_FILE, "r")
+    content = file.read()
+    file.close()
+    response = make_response(content, 200)
+    response.mimetype = "text/plain"
+    return response
+
 
 def allowed_file(filename):
     return '.' in filename and \

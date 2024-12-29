@@ -2,8 +2,8 @@ import { useSettings } from "@/lib/settings";
 import { Button, buttonVariants } from "./ui/button";
 import { Link, Outlet } from "react-router";
 import {
+  FileTextIcon,
   HomeIcon,
-  Pencil1Icon,
   PlusCircledIcon,
   TextIcon,
 } from "@radix-ui/react-icons";
@@ -27,14 +27,17 @@ export default function Layout() {
 
           <Separator />
 
-          <Link to="/editImage" className={buttonVariants({ variant: "link" })}>
-            <Pencil1Icon /> Edit Image
+          <Link to="/quickText" className={buttonVariants({ variant: "link" })}>
+            <TextIcon /> Quick Text
           </Link>
 
           <Separator />
 
-          <Link to="/quickText" className={buttonVariants({ variant: "link" })}>
-            <TextIcon /> Quick Text
+          <Link
+            to="/serverLogs"
+            className={buttonVariants({ variant: "link" })}
+          >
+            <FileTextIcon /> Server Logs
           </Link>
         </nav>
         <Button
