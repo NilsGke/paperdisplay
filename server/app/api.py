@@ -10,6 +10,11 @@ DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.
 ALLOWED_EXTENSIONS = ["bmp"]
 LOG_FILE = os.path.join(os.getcwd(), "../log.txt")
 
+VERSION_FILE = os.path.join(os.getcwd(), "../version.txt")
+f = open(VERSION_FILE)
+VERSION = f.read()
+f.close()
+
 print(os.getcwd())
 
 @api.route('/images', methods=["GET"])
@@ -107,14 +112,20 @@ def preview_image():
     
     return jsonify(success=True)
         
-        
-        
+
 @api.route("/logs", methods=["GET"])
 def get_logs():
     file = open(LOG_FILE, "r")
     content = file.read()
     file.close()
     response = make_response(content, 200)
+    response.mimetype = "text/plain"
+    return response
+
+
+@api.route("/version", methods=["GET"])
+def get_version():
+    response = make_response(VERSION, 200)
     response.mimetype = "text/plain"
     return response
 
