@@ -49,7 +49,7 @@ export default function VersionBanner() {
   return (
     <div>
       <div className="text-sm text-zinc-500">Version: {currentVersion}</div>
-      {currentVersion === latestVersion && (
+      {currentVersion !== latestVersion && (
         <a
           href="https://github.com/NilsGke/paperdisplay/blob/main/update.md"
           target="_blank"
