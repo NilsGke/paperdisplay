@@ -19,6 +19,7 @@ printf "\e[42m> installing global python dependencies\e[0m\n"
 sudo apt update
 sudo apt install libjpeg-dev zlib1g-dev
 sudo apt-get install python3-pil
+sudo apt-get install screen
 sudo apt install python3-gpiozero
 pip3 install pigpio
 pip3 install spidev

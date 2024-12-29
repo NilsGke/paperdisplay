@@ -54,6 +54,10 @@ pip3 install spidev
 pip3 install gpiozero
 # (TODO: CHECK IF ALL OF THEM ARE RELEVANT)
 
+# install screen to be ablet to run server process in background
+sudo apt-get install screen
+
+
 # setup python server
 cd server
 python3 -m venv venv # create python virtual env
@@ -86,7 +90,14 @@ To start the server just run the `./start.sh` file in the root of the project.
 ./start.sh
 ```
 
-You might need to update the permissions.
+This will run the server in the background.  
+You can attatch to the process by running:
+
+```bash
+screen -r paperdisplay-server
+```
+
+You might need to update the permissions when you are trying to run the start script
 
 ```bash
 chmod +x ./start.sh
@@ -95,15 +106,17 @@ chmod +x ./start.sh
 ## Update
 
 If there is a new version available, the frontend will show a banner on the start page.
-To update the project, run the `./update.sh` shell script.
+To update the project, first stop the server and run the `./update.sh` shell script.
 
 ```bash
+./stop.sh
 ./update.sh
 ```
 
 You might need to update the permissions.
 
 ```bash
+chmod +x ./stop.sh
 chmod +x ./update.sh
 ```
 
