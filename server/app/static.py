@@ -28,4 +28,4 @@ def send_report(path):
     try:
         return send_from_directory(STATIC_DIR, path)
     except FileNotFoundError:
-        abort(404)
+        return send_from_directory(STATIC_DIR, "index.html") # if file not found, send index (necessary to make react-router work)
