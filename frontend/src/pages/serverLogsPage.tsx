@@ -7,6 +7,7 @@ export default function ServerLogsPage() {
     data: logs,
     error,
     isPending,
+    isRefetching,
   } = useQuery({
     queryKey: ["logs"],
     queryFn: async () => {
@@ -15,7 +16,7 @@ export default function ServerLogsPage() {
       else throw Error(res.statusText);
     },
     retry: (failureCount) => failureCount < 3,
-    refetchInterval: 1000,
+    refetchInterval: 2000,
   });
 
   return (
@@ -23,7 +24,7 @@ export default function ServerLogsPage() {
       <Card className="min-w-full lg:min-w-[55rem] max-w-[90%] max-h-[80vh] overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <h2>Server Logs</h2> {isPending && <Spinner />}
+            <h2>Server Logs</h2> {(isPending || isRefetching) && <Spinner />}
           </CardTitle>
         </CardHeader>
         <CardContent className="h-full max-h-[75vh] overflow-scroll scroll-smooth flex flex-col-reverse">

@@ -35,7 +35,6 @@ export default function monochrome(
   threshold: number,
   type: "none" | "bayer" | "floydsteinberg"
 ) {
-  console.log(imageData);
   const imageDataLength = imageData.data.length;
 
   // Greyscale luminance (sets r pixels to luminance of rgb)

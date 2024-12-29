@@ -37,6 +37,5 @@ export default defineConfig(({ mode }) => {
       },
     },
   } satisfies UserConfig;
-  console.log(cfg.server.proxy);
   return cfg;
 });

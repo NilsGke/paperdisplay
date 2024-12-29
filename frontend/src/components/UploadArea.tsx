@@ -85,8 +85,6 @@ export default function UplaodArea() {
     reader.readAsArrayBuffer(file);
   }, [file]);
 
-  console.log(file);
-
   return (
     <label
       htmlFor="fileInput"
