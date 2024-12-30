@@ -1,5 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
@@ -11,6 +28,7 @@ import { env } from "@/env";
 import monochrome from "@/helpers/monochrome";
 import {
   BlendingModeIcon,
+  FilePlusIcon,
   PaperPlaneIcon,
   TransparencyGridIcon,
 } from "@radix-ui/react-icons";
@@ -18,11 +36,78 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
+const fonts = [
+  "Arial",
+  "Verdana",
+  "Tahoma",
+  "Trebuchet MS",
+  "Times New Roman",
+  "Georgia",
+  "Garamond",
+  "Courier New",
+  "Brush Script MT",
+] as const;
+
 export default function QuickTextPage() {
   const [text, setText] = useState("");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [invert, setInvert] = useState(false);
   const [dithering, setDithering] = useState(false);
+  const [font, setFont] = useState<(typeof fonts)[number]>("Arial");
+
+  // preview on save
+  const [loadPreview, setLoadPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  useEffect(() => {
+    if (!loadPreview || canvasRef.current === null) return setPreviewUrl(null);
+
+    setPreviewUrl(canvasRef.current.toDataURL());
+  }, [loadPreview]);
+  const { mutate: saveFile } = useMutation({
+    mutationFn: async () => {
+      if (canvasRef.current === null) {
+        toast.error("could not get canvas");
+        throw new Error("could not get canvas");
+      }
+      const blob = await new Promise<Blob | null>((r) =>
+        canvasRef.current!.toBlob(r)
+      );
+      if (blob === null) {
+        toast.error("could not make blob out of canvas");
+        throw new Error("could not make blob out of canvas");
+      }
+      const file = new File([blob], fileName);
+
+      if (file === null) throw Error("no file selected");
+      const data = new FormData();
+
+      data.append(
+        "file",
+        new File([file], fileName, {
+          // necessary because here we can change the filename
+          type: file.type,
+          lastModified: file.lastModified,
+        })
+      );
+      data.append("user", "hubot");
+      return fetch("/api/addImage", {
+        method: "POST",
+        body: data,
+      });
+    },
+    onSuccess: async (response) => {
+      if (response.status === 200)
+        return toast.success("successfully saved image!");
+      else {
+        toast.error(response.statusText);
+        toast.error(await response.text());
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message ?? error);
+    },
+  });
 
   // draw to canvas
   useEffect(() => {
@@ -55,7 +140,7 @@ export default function QuickTextPage() {
 
     // Adjust font size dynamically
     while (fontSize > minFontSize) {
-      context.font = `${fontSize}px Arial`;
+      context.font = `${fontSize}px ${font}`;
       lineHeight = fontSize * lineHeightRatio;
 
       const textLines = (text.length === 0 ? "preview" : text).split("\n"); // Split into explicit new lines
@@ -98,7 +183,7 @@ export default function QuickTextPage() {
       const dithered = monochrome(imageData, 0.5, "floydsteinberg");
       context.putImageData(dithered, 0, 0);
     }
-  }, [invert, text, dithering]);
+  }, [invert, text, dithering, font]);
 
   const { mutate } = useMutation({
     mutationFn: async (file: File) => {
@@ -150,7 +235,7 @@ export default function QuickTextPage() {
           <CardTitle>Quick Text</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-rows-[repeat(auto,2] gap-4">
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <Textarea
               autoFocus
               placeholder="type your text here…"
@@ -158,42 +243,109 @@ export default function QuickTextPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
             />
+            <div className="flex gap-2">
+              <Select
+                value={font}
+                onValueChange={(newFont: typeof font) => setFont(newFont)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fonts.map((font) => (
+                    <SelectItem
+                      key={font}
+                      value={font}
+                      style={{
+                        fontFamily: font,
+                      }}
+                    >
+                      {font}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <ToggleGroup
+                orientation="horizontal"
+                variant="outline"
+                type="multiple"
+                className="gap-2 "
+                value={[
+                  invert ? "invert" : undefined,
+                  dithering ? "dithering" : undefined,
+                ].filter((s) => s !== undefined)}
+                onValueChange={(selected: ("invert" | "dithering")[]) => {
+                  setInvert(selected.includes("invert"));
+                  setDithering(selected.includes("dithering"));
+                }}
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="invert">
+                      <BlendingModeIcon />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>invert image</p>
+                  </TooltipContent>
+                </Tooltip>
 
-            <ToggleGroup
-              variant="outline"
-              type="multiple"
-              className="flex flex-col gap-2"
-              value={[
-                invert ? "invert" : undefined,
-                dithering ? "dithering" : undefined,
-              ].filter((s) => s !== undefined)}
-              onValueChange={(selected: ("invert" | "dithering")[]) => {
-                setInvert(selected.includes("invert"));
-                setDithering(selected.includes("dithering"));
-              }}
-            >
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <ToggleGroupItem value="invert">
-                    <BlendingModeIcon />
-                  </ToggleGroupItem>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>invert image</p>
-                </TooltipContent>
-              </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="dithering">
+                      <TransparencyGridIcon />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>apply dithering</p>
+                  </TooltipContent>
+                </Tooltip>
+              </ToggleGroup>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <ToggleGroupItem value="dithering">
-                    <TransparencyGridIcon />
-                  </ToggleGroupItem>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>apply dithering</p>
-                </TooltipContent>
-              </Tooltip>
-            </ToggleGroup>
+              <Dialog onOpenChange={(state) => setLoadPreview(state)}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="ml-auto">
+                    <FilePlusIcon />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Image</DialogTitle>
+                    <DialogDescription>
+                      Please provide a filename below
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex items-center space-x-2">
+                    <img
+                      src={previewUrl || undefined}
+                      className="w-full h-auto rounded"
+                      alt={"your image"}
+                      height={env.VITE_CANVAS_HEIGHT}
+                      width={env.VITE_CANVAS_WIDTH}
+                    />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="yourFileName.bmp"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
+                  />
+                  <DialogFooter className="flex justify-between w-full">
+                    <Button
+                      type="submit"
+                      className="px-3"
+                      onClick={() => {
+                        if (!fileName.endsWith(".bmp"))
+                          return toast.error("filename must end with .bmp");
+                        saveFile();
+                      }}
+                    >
+                      Save Image
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           <div>
             <canvas
