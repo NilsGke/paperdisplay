@@ -3,15 +3,8 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "react-toastify";
-import { Link } from "react-router";
-import { twMerge } from "tailwind-merge";
-import { Button, buttonVariants } from "./ui/button";
-import {
-  DownloadIcon,
-  PlayIcon,
-  PlusCircledIcon,
-  TrashIcon,
-} from "@radix-ui/react-icons";
+import { Button } from "./ui/button";
+import { DownloadIcon, PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import {
   Dialog,
@@ -209,16 +202,6 @@ export default function Images() {
             </div>
           );
         })}
-
-      <Link
-        to="/addImage"
-        className={twMerge(
-          buttonVariants({ variant: "outline" }),
-          "p-4 transition border border-dashed"
-        )}
-      >
-        <PlusCircledIcon /> add Image
-      </Link>
     </div>
   );
 }
