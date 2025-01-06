@@ -29,6 +29,7 @@ import monochrome from "@/helpers/monochrome";
 import {
   BlendingModeIcon,
   FilePlusIcon,
+  FontBoldIcon,
   PaperPlaneIcon,
   TransparencyGridIcon,
 } from "@radix-ui/react-icons";
@@ -52,6 +53,7 @@ export default function QuickTextPage() {
   const [text, setText] = useState("");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [invert, setInvert] = useState(false);
+  const [bold, setBold] = useState(false);
   const [dithering, setDithering] = useState(false);
   const [font, setFont] = useState<(typeof fonts)[number]>("Arial");
 
@@ -140,7 +142,7 @@ export default function QuickTextPage() {
 
     // Adjust font size dynamically
     while (fontSize > minFontSize) {
-      context.font = `${fontSize}px ${font}`;
+      context.font = `${bold ? "bold " : ""}${fontSize}px ${font}`;
       lineHeight = fontSize * lineHeightRatio;
 
       const textLines = (text.length === 0 ? "preview" : text).split("\n"); // Split into explicit new lines
@@ -183,7 +185,7 @@ export default function QuickTextPage() {
       const dithered = monochrome(imageData, 0.5, "floydsteinberg");
       context.putImageData(dithered, 0, 0);
     }
-  }, [invert, text, dithering, font]);
+  }, [invert, text, dithering, font, bold]);
 
   const { mutate } = useMutation({
     mutationFn: async (file: File) => {
@@ -273,12 +275,27 @@ export default function QuickTextPage() {
                 value={[
                   invert ? "invert" : undefined,
                   dithering ? "dithering" : undefined,
+                  bold ? "bold" : undefined,
                 ].filter((s) => s !== undefined)}
-                onValueChange={(selected: ("invert" | "dithering")[]) => {
+                onValueChange={(
+                  selected: ("invert" | "dithering" | "bold")[]
+                ) => {
                   setInvert(selected.includes("invert"));
                   setDithering(selected.includes("dithering"));
+                  setBold(selected.includes("bold"));
                 }}
               >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem value="bold">
+                      <FontBoldIcon />
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>bold</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <ToggleGroupItem value="invert">
