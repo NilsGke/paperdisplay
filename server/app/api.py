@@ -5,7 +5,19 @@ from werkzeug.utils import secure_filename
 
 api = Blueprint("api", __name__)
 
-IMAGES_DIR = os.path.join(os.getcwd(), "../../images")
+# First try the development path (../images)
+dev_images_path = os.path.join(os.getcwd(), "../images")
+# Fallback to production path (../../images)
+prod_images_path = os.path.join(os.getcwd(), "../../images")
+
+# Check if development path exists, otherwise use production path
+if os.path.exists(dev_images_path) and os.path.isdir(dev_images_path):
+    IMAGES_DIR = dev_images_path
+    print(f"Using development images directory: {IMAGES_DIR}")
+else:
+    IMAGES_DIR = prod_images_path
+    print(f"Using production images directory: {IMAGES_DIR}")
+
 DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.py")
 ALLOWED_EXTENSIONS = ["bmp"]
 LOG_FILE = os.path.join(os.getcwd(), "../log.txt")
