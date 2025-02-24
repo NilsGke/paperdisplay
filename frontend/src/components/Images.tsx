@@ -35,6 +35,15 @@ export default function Images() {
     },
   });
 
+  const { data: currentImageName, refetch: refetchCurrentImage } = useQuery({
+    queryKey: ["currentImage"],
+    queryFn: async () => {
+      const res = await fetch("/api/currentImage");
+      if (res.status === 204) return null;
+      else return await res.text();
+    },
+  });
+
   const {
     mutate: setImae,
     isPending: setImagePending,
@@ -56,6 +65,7 @@ export default function Images() {
     },
 
     onError: (error) => toast.error(`Error: ${error.message}`),
+    onSuccess: () => refetchCurrentImage(),
   });
 
   const {
@@ -84,7 +94,7 @@ export default function Images() {
 
   return (
     <div
-      className="flex flex-wrap items-center justify-center gap-6"
+      className="flex flex-wrap items-center justify-center gap-6 pt-2"
       ref={imagesContainerRef}
     >
       {isLoading && (
@@ -108,18 +118,20 @@ export default function Images() {
                   {
                     "animate-pulse hover:animate-none hover:brightness-100 brightness-75":
                       setImagePending && pendingImageName === imageName,
+                    "outline-black dark:outline-white outline-3 outline-offset-4 outline-dashed":
+                      currentImageName === imageName,
                   }
                 )}
                 key={imageName}
               >
                 <img
-                  className="absolute top-0 left-0 w-auto h-32"
+                  className="absolute top-0 left-0 w-auto h-32 rounded"
                   src={`/api/images/${imageName}`}
                   alt={`your image: ${imageName}`}
                   height={env.VITE_CANVAS_HEIGHT}
                   width={env.VITE_CANVAS_WIDTH}
                 />
-                <div className="z-10 flex items-center justify-center gap-2 transition-all opacity-0 size-full group-focus-within:opacity-100 group-hover:opacity-100 backdrop-blur-sm bg-white/70 dark:bg-black/80">
+                <div className="z-10 flex items-center justify-center gap-2 transition-all rounded opacity-0 size-full group-focus-within:opacity-100 group-hover:opacity-100 backdrop-blur-sm bg-white/70 dark:bg-black/80">
                   <Button
                     className={cn({
                       "animate-pulse brightness-75":

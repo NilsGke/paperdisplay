@@ -27,6 +27,9 @@ f = open(VERSION_FILE)
 VERSION = f.read()
 f.close()
 
+# Store the currently displayed image name
+CURRENT_IMAGE = None
+
 print(os.getcwd())
 
 @api.route('/images', methods=["GET"])
@@ -55,12 +58,11 @@ def get_image(filename):
 
 @api.route("/setImage/<filename>", methods=["POST"])
 def set_image(filename):
-
+    global CURRENT_IMAGE
     try:
         # Check if the file exists in the directory
         if filename not in os.listdir(IMAGES_DIR):
             return "Image not found", 404
-        
         
         try:
             # Call the external Python script
@@ -70,6 +72,9 @@ def set_image(filename):
                 text=True,
                 check=True
             )
+            
+            # Save the current image name
+            CURRENT_IMAGE = filename
 
             # Return the output from the external script
             return jsonify({'message': 'Image drawn successfully', 'output': result.stdout}), 200
@@ -80,8 +85,8 @@ def set_image(filename):
     except Exception as e:
         print(e)
         return e, 400
-       
-        
+
+
 @api.route("/addImage", methods=["POST"])       
 def upload_image():
     if 'file' not in request.files:
@@ -92,19 +97,21 @@ def upload_image():
     if file.filename == '':
         return "you did not provide a file", 400
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+    if not (file or allowed_file(file.filename)):
+        return "the provided file extension is not allowed"
         
-        if filename == "temp.bmp":
-            return "filename not allowed", 400
-            
-        print(os.listdir(IMAGES_DIR))
-            
-        if filename in os.listdir(IMAGES_DIR):
-            return "filename already exists", 400
+    filename = secure_filename(file.filename)
+    
+    if filename == "temp.bmp":
+        return "filename not allowed", 400
         
-        file.save(os.path.join(IMAGES_DIR, filename))
-        return jsonify(success=True)
+    print(os.listdir(IMAGES_DIR))
+        
+    if filename in os.listdir(IMAGES_DIR):
+        return "filename already exists", 400
+    
+    file.save(os.path.join(IMAGES_DIR, filename))
+    return jsonify(success=True)
 
 
 @api.route("removeImage/<filename>", methods=["POST"])
@@ -119,9 +126,17 @@ def remove_image(filename):
     return make_response("ok", 200)
 
 
+@api.route("/currentImage", methods=["GET"])
+def get_current_image():
+    if CURRENT_IMAGE:
+        return CURRENT_IMAGE, 200
+    else:
+        return "", 204  # No Content status code
+
 
 @api.route("/previewImage", methods=["POST"])
 def preview_image():
+    global CURRENT_IMAGE
     if 'file' not in request.files:
         return "you did not provide a file", 400
     
@@ -133,6 +148,9 @@ def preview_image():
     file.save(os.path.join(IMAGES_DIR, "temp.bmp"))
     set_image("temp.bmp")
     os.remove(os.path.join(IMAGES_DIR, "temp.bmp"))
+    
+    # Reset current image since we're just previewing
+    CURRENT_IMAGE = None
     
     return jsonify(success=True)
         
