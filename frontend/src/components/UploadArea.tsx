@@ -9,6 +9,7 @@ import { useNavigate } from "react-router";
 import dataUrlFromImageFile from "@/helpers/dataUrlFromImagefile";
 import { env } from "@/env";
 import { Slider } from "./ui/slider";
+import canvasToBlob from "@/helpers/canvasToBlob";
 
 export default function UplaodArea() {
   const [file, setFile] = useState<File | null>(null);
@@ -25,9 +26,12 @@ export default function UplaodArea() {
       if (file === null) throw Error("no file selected");
       const data = new FormData();
 
+      if (canvasRef.current == null) throw Error("canvas is null");
+      const imageFile = await canvasToBlob(canvasRef.current);
+
       data.append(
         "file",
-        new File([file], filename, {
+        new File([imageFile], filename, {
           // necessary because here we can change the filename
           type: file.type,
           lastModified: file.lastModified,
@@ -77,7 +81,7 @@ export default function UplaodArea() {
       base_image.src = imageUrl;
       base_image.onload = () => setHtmlImage(base_image);
     });
-  }, [file, size]);
+  }, [file]);
 
   useEffect(() => {
     if (htmlImage === null) return;
