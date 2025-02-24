@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "./ui/button";
 import { Input } from "./ui/input";
 import { PlusCircledIcon, Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
@@ -6,11 +6,17 @@ import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import dataUrlFromImageFile from "@/helpers/dataUrlFromImagefile";
+import { env } from "@/env";
+import { Slider } from "./ui/slider";
 
 export default function UplaodArea() {
   const [file, setFile] = useState<File | null>(null);
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState("");
+  const [htmlImage, setHtmlImage] = useState<HTMLImageElement | null>(null);
+  const [size, setSize] = useState(100);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const navigate = useNavigate();
 
@@ -55,55 +61,59 @@ export default function UplaodArea() {
     }
     const file = fileList[0];
     // ensure file is bmp file
-    if (file.type !== "image/bmp") {
-      toast.error("Only BMP files are allowed");
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image");
       return;
     }
     setFile(file);
     setFilename(file.name);
   };
 
-  const submit = () => {
-    if (!filename.endsWith(".bmp"))
-      return toast.error("Filename must end with '.bmp'");
+  useEffect(() => {
+    if (file === null || canvasRef.current === null) return;
 
-    mutate();
-  };
+    dataUrlFromImageFile(file).then((imageUrl) => {
+      const base_image = new Image();
+      base_image.src = imageUrl;
+      base_image.onload = () => setHtmlImage(base_image);
+    });
+  }, [file, size]);
 
   useEffect(() => {
-    if (file === null) return;
+    if (htmlImage === null) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target === null || e.target.result === null)
-        return toast.error("could not read file");
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
 
-      if (!(e.target.result instanceof ArrayBuffer)) {
-        setDataUrl(e.target.result);
-        return;
-      }
+    const context = canvas.getContext("2d");
+    if (context === null) return;
 
-      const arr = new Uint8Array(e.target.result);
-      const header = arr.slice(0, 2);
-      if (header[0] !== 0x42 || header[1] !== 0x4d) {
-        toast.error("Invalid BMP file");
-        return;
-      }
-      const blob = new Blob([arr], { type: "image/bmp" });
-      const url = URL.createObjectURL(blob);
-      setDataUrl(url);
-      return;
-    };
-    reader.readAsArrayBuffer(file);
-  }, [file]);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    const imgLength = (htmlImage.width / 100) * size;
+    const imgHeight = (htmlImage.height / 100) * size;
+
+    context.drawImage(
+      htmlImage,
+      0,
+      0,
+      htmlImage.width,
+      htmlImage.height,
+      canvas.width / 2 - imgLength / 2,
+      canvas.height / 2 - imgHeight / 2,
+      imgLength,
+      imgHeight
+    );
+  }, [htmlImage, size]);
 
   return (
     <label
       htmlFor="fileInput"
       className={cn(
         file === null && buttonVariants({ variant: "ghost" }),
-        "flex cursor-pointer border border-dashed w-[30rem] h-[26rem]",
-        file !== null && "cursor-auto flex-col gap-2 rounded justify-between"
+        "flex cursor-pointer border border-dashed w-[30rem]",
+        file === null && "h-[20vh]",
+        file !== null && "cursor-auto flex-col gap-2 rounded"
       )}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -137,6 +147,7 @@ export default function UplaodArea() {
           <Input
             id="fileInput"
             type="file"
+            accept="image/*"
             className="sr-only"
             onChange={onChange}
           />
@@ -144,28 +155,35 @@ export default function UplaodArea() {
         </>
       ) : (
         <>
-          {dataUrl !== null ? (
-            <div className="p-2 animate-in fade-in">
-              <img
-                src={dataUrl}
-                alt="your image"
-                className="mb-3 rounded h-72 max-h-72"
+          <div className="p-2 animate-in fade-in">
+            <canvas
+              className="w-full h-auto mb-3 rounded"
+              height={env.VITE_CANVAS_HEIGHT}
+              width={env.VITE_CANVAS_WIDTH}
+              ref={canvasRef}
+              style={{
+                aspectRatio: env.VITE_CANVAS_WIDTH / env.VITE_CANVAS_HEIGHT,
+              }}
+            >
+              Your browser does not support html canvas
+            </canvas>
+            <div className="">
+              <Slider
+                min={1}
+                max={1000}
+                value={[size]}
+                onValueChange={(values) => setSize(values.at(0) || 100)}
               />
-              <div className="">
-                <Input
-                  className="text-xs text-center"
-                  value={filename}
-                  onChange={(e) => setFilename(e.target.value)}
-                />
-              </div>
+              <Input
+                className="text-xs text-center"
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+              />
             </div>
-          ) : (
-            <p className="duration-1000 animate-in fade-in">
-              selected file: ${file.name} (no preview avalible :/)
-            </p>
-          )}
+          </div>
+
           <div className="flex justify-center w-full gap-2 pb-2">
-            <Button onClick={submit}>
+            <Button onClick={() => mutate()}>
               <UploadIcon />
             </Button>
             <Button
@@ -173,7 +191,6 @@ export default function UplaodArea() {
               onClick={(e) => {
                 e.preventDefault();
                 setFile(null);
-                setDataUrl(null);
               }}
             >
               <Cross2Icon />
