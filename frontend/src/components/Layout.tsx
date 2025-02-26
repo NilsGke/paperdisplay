@@ -12,6 +12,7 @@ import {
 } from "@radix-ui/react-icons";
 import VersionBanner from "./VersionBanner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { CalendarClockIcon } from "lucide-react";
 
 export default function Layout() {
   const [settings, setSettings] = useSettings();
@@ -34,6 +35,12 @@ export default function Layout() {
 
           <Link to="/quickText" className={buttonVariants({ variant: "link" })}>
             <TextIcon /> Quick Text
+          </Link>
+
+          <Separator />
+
+          <Link to="/schedules" className={buttonVariants({ variant: "link" })}>
+            <CalendarClockIcon /> Schedules
           </Link>
 
           <Separator />
