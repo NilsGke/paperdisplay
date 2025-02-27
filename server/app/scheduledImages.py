@@ -3,7 +3,6 @@ from apscheduler.job import Job
 from app.display import set_image
 from typing import List
 from datetime import datetime
-from app.config import CURRENT_IMAGE
 
 scheduler = BackgroundScheduler()
 scheduler.start()
@@ -18,14 +17,12 @@ class Scheduled_Image:
   
   
   def run(self):
-    global CURRENT_IMAGE
     weekday = datetime.now().weekday()
     should_run_today = self.days[weekday]
     if(should_run_today):
       jsonResult, status = set_image(self.image_name)
       if(status == 200): 
         print(f"applied {self.image_name} as scheduled")
-        CURRENT_IMAGE = self.image_name
       else: print(f"error while applying scheduled image:\n{jsonResult}")
     
   

@@ -1,7 +1,6 @@
 import os
 import subprocess
-from app.config import IMAGES_DIR, DRAW_SCRIPT_PATH
-from app.config import CURRENT_IMAGE
+from app.config import IMAGES_DIR, DRAW_SCRIPT_PATH, set_current_image
 
 def set_image(filename: str) -> dict:
     try:
@@ -10,7 +9,6 @@ def set_image(filename: str) -> dict:
             return {"error": "Image not found"}, 404
         
         try:
-            global CURRENT_IMAGE
             # Call the external Python script
             result = subprocess.run(
                 ['python3', DRAW_SCRIPT_PATH, '--bmpfile', filename],
@@ -19,7 +17,7 @@ def set_image(filename: str) -> dict:
                 check=True
             )
             
-            CURRENT_IMAGE = filename
+            set_current_image(filename)
             
             # Return the output from the external script
             return {'message': 'Image drawn successfully', 'output': result.stdout}, 200

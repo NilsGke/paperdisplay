@@ -15,3 +15,11 @@ DRAW_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../../display/paint.
 
 # Store the currently displayed image name
 CURRENT_IMAGE = None 
+
+def set_current_image(image_name: str):
+    global CURRENT_IMAGE
+    CURRENT_IMAGE = image_name
+    
+def get_current_image():
+    global CURRENT_IMAGE
+    return CURRENT_IMAGE

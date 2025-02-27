@@ -2,7 +2,7 @@ import os
 from typing import List
 from flask import Blueprint, jsonify, make_response, request, send_from_directory
 from werkzeug.utils import secure_filename
-from app.config import IMAGES_DIR, CURRENT_IMAGE
+from app.config import IMAGES_DIR, get_current_image, set_current_image
 from app.display import set_image
 from app.scheduledImages import get_schedules, remove_schedule, schedule_image, edit_schedule
 
@@ -58,10 +58,7 @@ def get_image(filename):
 
 @api.route("/setImage/<filename>", methods=["POST"])
 def set_image_endpoint(filename):
-    global CURRENT_IMAGE
     response, status_code = set_image(filename)
-    if status_code == 200:
-        CURRENT_IMAGE = filename
     return jsonify(response), status_code
 
 
@@ -105,16 +102,16 @@ def remove_image(filename):
 
 
 @api.route("/currentImage", methods=["GET"])
-def get_current_image():
-    if CURRENT_IMAGE:
-        return CURRENT_IMAGE, 200
+def get_current_image_endpoint():
+    current_image = get_current_image()
+    if current_image:
+        return current_image, 200
     else:
         return "", 204  # No Content status code
 
 
 @api.route("/previewImage", methods=["POST"])
 def preview_image():
-    global CURRENT_IMAGE
     if 'file' not in request.files:
         return "you did not provide a file", 400
     
@@ -127,8 +124,8 @@ def preview_image():
     set_image("temp.bmp")
     os.remove(os.path.join(IMAGES_DIR, "temp.bmp"))
     
-    # Reset current image since we're just previewing
-    CURRENT_IMAGE = None
+    # reset current image since the preview does not show up in the overview
+    set_current_image(None)
     
     return jsonify(success=True)
         
