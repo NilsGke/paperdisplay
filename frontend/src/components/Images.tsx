@@ -3,20 +3,9 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "react-toastify";
-import { Button } from "./ui/button";
 import { DownloadIcon, PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-
+import DeleteImageDialog from "./DeleteImageDialog";
 export default function Images() {
   const [imagesContainerRef] = useAutoAnimate();
 
@@ -92,6 +81,21 @@ export default function Images() {
     onError: (error) => toast.error(`Error: ${error.message}`),
   });
 
+  const downloadImage = async (imageName: string) => {
+    const imgBlob = await fetch(`/api/images/${imageName}`).then((res) =>
+      res.blob()
+    );
+    const fileURL = URL.createObjectURL(imgBlob);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = fileURL;
+    downloadLink.download = imageName;
+    document.body.appendChild(downloadLink);
+    downloadLink.addEventListener("click", () =>
+      setTimeout(() => URL.revokeObjectURL(fileURL), 5000)
+    );
+    downloadLink.click();
+  };
+
   return (
     <div
       className="flex flex-wrap items-center justify-center gap-6 pt-2"
@@ -109,111 +113,67 @@ export default function Images() {
 
       {images
         ?.filter((img) => img !== removingName)
-        .map((imageName) => {
-          return (
-            <div key={imageName} className="flex flex-col gap-1 group">
-              <div
-                className={cn(
-                  "flex relative flex-col w-52 h-32 items-center gap-1 rounded shadow-lg outline outline-1 outline-zinc-100 dark:outline-zinc-800 overflow-hidden",
-                  {
-                    "animate-pulse hover:animate-none hover:brightness-100 brightness-75":
+        .map((imageName) => (
+          <div key={imageName} className="flex flex-col gap-2 group">
+            <div
+              className={cn(
+                "flex relative flex-col w-52 h-32 items-center gap-1 rounded shadow-lg outline outline-1 outline-zinc-100 dark:outline-zinc-800 overflow-hidden",
+                {
+                  "animate-pulse hover:animate-none hover:brightness-100 brightness-75":
+                    setImagePending && pendingImageName === imageName,
+                  "outline-black dark:outline-white outline-3 outline-offset-4 outline-dashed":
+                    currentImageName === imageName,
+                }
+              )}
+              key={imageName}
+            >
+              <img
+                className="absolute top-0 left-0 w-auto h-32 rounded"
+                src={`/api/images/${imageName}`}
+                alt={`your image: ${imageName}`}
+                height={env.VITE_CANVAS_HEIGHT}
+                width={env.VITE_CANVAS_WIDTH}
+              />
+              <div className="z-10 gap-2 transition-all rounded opacity-0 size-full group-focus-within:opacity-100 group-hover:opacity-100 backdrop-blur-[3px] bg-white/70 dark:bg-black/50">
+                <button
+                  className={cn("size-full flex justify-center items-center", {
+                    "animate-pulse brightness-75":
                       setImagePending && pendingImageName === imageName,
-                    "outline-black dark:outline-white outline-3 outline-offset-4 outline-dashed":
-                      currentImageName === imageName,
-                  }
-                )}
-                key={imageName}
-              >
-                <img
-                  className="absolute top-0 left-0 w-auto h-32 rounded"
-                  src={`/api/images/${imageName}`}
-                  alt={`your image: ${imageName}`}
-                  height={env.VITE_CANVAS_HEIGHT}
-                  width={env.VITE_CANVAS_WIDTH}
-                />
-                <div className="z-10 flex items-center justify-center gap-2 transition-all rounded opacity-0 size-full group-focus-within:opacity-100 group-hover:opacity-100 backdrop-blur-sm bg-white/70 dark:bg-black/80">
-                  <Button
-                    className={cn({
-                      "animate-pulse brightness-75":
-                        setImagePending && pendingImageName === imageName,
-                    })}
-                    onClick={() => setImae(imageName)}
-                    disabled={setImagePending}
-                  >
-                    <PlayIcon />
-                  </Button>
+                  })}
+                  onClick={() => setImae(imageName)}
+                  disabled={setImagePending}
+                >
+                  <PlayIcon height={40} width={40} />
+                </button>
 
-                  <Button
-                    onClick={async () => {
-                      const imgBlob = await fetch(
-                        `/api/images/${imageName}`
-                      ).then((res) => res.blob());
-                      const fileURL = URL.createObjectURL(imgBlob);
-                      const downloadLink = document.createElement("a");
-                      downloadLink.href = fileURL;
-                      downloadLink.download = imageName;
-                      document.body.appendChild(downloadLink);
-                      downloadLink.addEventListener("click", () =>
-                        setTimeout(() => URL.revokeObjectURL(fileURL), 5000)
-                      );
-                      downloadLink.click();
-                    }}
-                    variant="outline"
+                <div className="absolute flex gap-1 bottom-2 right-2 flex-nowrap ">
+                  <button
+                    className="p-1 transition-colors rounded hover:bg-zinc-300/40 hover:dark:bg-zinc-800/40"
+                    onClick={() => downloadImage(imageName)}
                   >
                     <DownloadIcon />
-                  </Button>
+                  </button>
 
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        disabled={setImagePending || removePending}
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>
-                          Sure you want to delete <u>{imageName}</u>
-                        </DialogTitle>
-                        <DialogDescription>
-                          You cannot recover this image after deletion
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="flex items-center space-x-2">
-                        <img
-                          className="w-full h-auto rounded"
-                          src={`/api/images/${imageName}`}
-                          alt={`your image: ${imageName}`}
-                          height={env.VITE_CANVAS_HEIGHT}
-                          width={env.VITE_CANVAS_WIDTH}
-                        />
-                      </div>
-                      <DialogFooter className="flex justify-between w-full">
-                        <Button
-                          type="submit"
-                          className="px-3"
-                          variant="destructive"
-                          onClick={() => removeImage(imageName)}
-                        >
-                          <TrashIcon /> Remove Image forever
-                        </Button>
-                        <DialogClose asChild>
-                          <Button type="button">Cancel</Button>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <DeleteImageDialog
+                    imageName={imageName}
+                    removeImage={() => removeImage(imageName)}
+                  >
+                    <button
+                      className="p-1 transition-colors rounded hover:bg-red-500/40 hover:dark:bg-red-800/40"
+                      disabled={setImagePending || removePending}
+                    >
+                      <TrashIcon />
+                    </button>
+                  </DeleteImageDialog>
                 </div>
               </div>
-
-              <p className="w-full text-xs text-center text-zinc-500 dark:text-zinc-300">
-                {imageName}
-              </p>
             </div>
-          );
-        })}
+
+            <p className="w-full text-xs text-center text-zinc-500 dark:text-zinc-300">
+              {imageName}
+            </p>
+          </div>
+        ))}
     </div>
   );
 }
