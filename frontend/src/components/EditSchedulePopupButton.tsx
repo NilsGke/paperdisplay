@@ -6,12 +6,12 @@ import {
   DialogDescription,
   DialogClose,
 } from "./ui/dialog";
-import { Plus } from "lucide-react";
+import { Edit } from "lucide-react";
 import ImageSelector from "./ImageSelector";
 import { TimePicker } from "./timePicker/TimePicker";
 import { Button } from "./ui/button";
 import { DialogHeader, DialogFooter } from "./ui/dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { ToggleGroupItemProps } from "@radix-ui/react-toggle-group";
 import { UseMutateFunction } from "@tanstack/react-query";
@@ -20,40 +20,55 @@ import { cn } from "@/lib/utils";
 import type { ScheduledImage } from "@/pages/schedulesPage";
 import { toast } from "react-toastify";
 
-export default function AddSchedulePopupButton({
-  createSchedule,
+export default function EditSchedulePopupButton({
+  initialScheduledImage,
+  editScheduled,
+  removeScheduled,
 }: {
-  createSchedule: UseMutateFunction<
+  initialScheduledImage: ScheduledImage;
+  editScheduled: UseMutateFunction<void, Error, ScheduledImage, unknown>;
+  removeScheduled: UseMutateFunction<
     void,
     Error,
-    Omit<ScheduledImage, "id">,
+    Pick<ScheduledImage, "id">,
     unknown
   >;
 }) {
-  const [imageName, setImageName] = useState("");
-  const [time, setTime] = useState<Date | undefined>(new Date());
-  const [days, setDays] = useState<ScheduledImage["days"]>([
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-  ]);
+  const [imageName, setImageName] = useState(initialScheduledImage.imageName);
+  const [time, setTime] = useState<Date | undefined>(() => {
+    const d = new Date();
+    d.setHours(initialScheduledImage.hour);
+    d.setMinutes(initialScheduledImage.minute);
+    return d;
+  });
+  const [days, setDays] = useState<ScheduledImage["days"]>(
+    initialScheduledImage.days
+  );
 
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (open) return;
+    setImageName(initialScheduledImage.imageName);
+    setTime(() => {
+      const d = new Date();
+      d.setHours(initialScheduledImage.hour);
+      d.setMinutes(initialScheduledImage.minute);
+      return d;
+    });
+    setDays(initialScheduledImage.days);
+  }, [open, initialScheduledImage]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className="w-full" asChild>
-        <Button variant={"outline"} className="w-full">
-          <Plus />
+        <Button variant={"outline"} size="icon" className="aspect-square">
+          <Edit />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a Scheduled Image</DialogTitle>
+          <DialogTitle>Edit a Scheduled Image</DialogTitle>
           <DialogDescription>
             Select an image, time and days and the Display will automatically
             apply the image on the specified days
@@ -66,7 +81,7 @@ export default function AddSchedulePopupButton({
               <ImageSelector
                 value={imageName}
                 onChange={setImageName}
-                className="w-full "
+                className="w-full"
               />
 
               <TimePicker date={time} setDate={setTime} />
@@ -96,6 +111,9 @@ export default function AddSchedulePopupButton({
           <ToggleGroup
             type="multiple"
             className="justify-between"
+            value={["mo", "tu", "we", "th", "fr", "sa", "su"].filter(
+              (_elm, index) => days.at(index)
+            )}
             onValueChange={(days) =>
               setDays([
                 days.includes("mo"),
@@ -118,36 +136,52 @@ export default function AddSchedulePopupButton({
           </ToggleGroup>
         </div>
 
-        <DialogFooter className="sm:justify-start">
-          <DialogClose asChild>
-            <Button type="button" variant="secondary">
-              Cancel
-            </Button>
-          </DialogClose>
+        <DialogFooter className="w-full">
+          <div className="flex justify-between w-full gap-2">
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                onClick={() => {
+                  if (time === undefined)
+                    return toast.error("please enter a time");
+                  if (days.every((day) => day === false))
+                    return toast.error("please select at least one day");
+
+                  const minute = time.getMinutes();
+                  const hour = time.getHours();
+
+                  editScheduled(
+                    {
+                      id: initialScheduledImage.id,
+                      minute,
+                      hour,
+                      imageName,
+                      days,
+                    },
+                    { onSuccess: () => setOpen(false) }
+                  );
+                }}
+                type="button"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
           <Button
+            className="w-min"
+            variant={"destructive"}
             onClick={() => {
-              if (time === undefined) return toast.error("please enter a time");
-              if (days.every((day) => day === false))
-                return toast.error("please select at least one day");
-
-              const minute = time.getMinutes();
-              const hour = time.getHours();
-
-              createSchedule(
-                { minute, hour, imageName, days },
-                {
-                  onSuccess: () => {
-                    setOpen(false);
-                    setTime(new Date());
-                    setImageName("");
-                    setDays([false, false, false, false, false, false, false]);
-                  },
-                }
+              removeScheduled(
+                { id: initialScheduledImage.id },
+                { onSuccess: () => setOpen(false) }
               );
             }}
-            type="button"
           >
-            Save
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>
