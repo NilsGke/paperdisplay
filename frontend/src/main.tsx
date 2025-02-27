@@ -12,6 +12,7 @@ import AddImagePage from "./pages/addImagePage";
 import QuickTextPage from "./pages/quickTextPage";
 import { TooltipProvider } from "./components/ui/tooltip";
 import ServerLogsPage from "./pages/serverLogsPage";
+import SchedulesPage from "./pages/schedulesPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ createRoot(document.getElementById("root")!).render(
               <Route index path="/" element={<RootPage />} />
               <Route path="/addImage" element={<AddImagePage />} />
               <Route path="/quickText" element={<QuickTextPage />} />
+              <Route path="/schedules" element={<SchedulesPage />} />
               <Route path="/serverLogs" element={<ServerLogsPage />} />
             </Route>
           </Routes>

@@ -1,7 +1,10 @@
 import os
-import subprocess
+from typing import List
 from flask import Blueprint, jsonify, make_response, request, send_from_directory
 from werkzeug.utils import secure_filename
+from app.config import IMAGES_DIR, CURRENT_IMAGE
+from app.display import set_image
+from app.scheduledImages import get_schedules, remove_schedule, schedule_image, edit_schedule
 
 api = Blueprint("api", __name__)
 
@@ -26,9 +29,6 @@ VERSION_FILE = os.path.join(os.getcwd(), "../version.txt")
 f = open(VERSION_FILE)
 VERSION = f.read()
 f.close()
-
-# Store the currently displayed image name
-CURRENT_IMAGE = None
 
 print(os.getcwd())
 
@@ -57,34 +57,12 @@ def get_image(filename):
 
 
 @api.route("/setImage/<filename>", methods=["POST"])
-def set_image(filename):
+def set_image_endpoint(filename):
     global CURRENT_IMAGE
-    try:
-        # Check if the file exists in the directory
-        if filename not in os.listdir(IMAGES_DIR):
-            return "Image not found", 404
-        
-        try:
-            # Call the external Python script
-            result = subprocess.run(
-                ['python3', DRAW_SCRIPT_PATH, '--bmpfile', filename],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
-            # Save the current image name
-            CURRENT_IMAGE = filename
-
-            # Return the output from the external script
-            return jsonify({'message': 'Image drawn successfully', 'output': result.stdout}), 200
-        except subprocess.CalledProcessError as e:
-            # Handle errors from the external script
-            return jsonify({'error': 'Error drawing image', 'details': e.stderr}), 500
-        
-    except Exception as e:
-        print(e)
-        return e, 400
+    response, status_code = set_image(filename)
+    if status_code == 200:
+        CURRENT_IMAGE = filename
+    return jsonify(response), status_code
 
 
 @api.route("/addImage", methods=["POST"])       
@@ -172,6 +150,57 @@ def get_version():
     return response
 
 
+@api.route("/addSchedule", methods=["POST"])
+def add_schedule_endpoint():
+    body = request.get_json()
+    hour: str = body['hour']
+    minute: str = body['minute']
+    image_name: str = body['imageName']
+    days: List[bool] = body['days']
+    
+    if(hour == None or minute == None or image_name == None or days == None or len(days) != 7):
+        return "invalid parameters", 400
+    
+    
+    schedule_image(hour, minute, image_name, days)
+    return "", 200
+
+@api.route("/getSchedules", methods=["GET"])
+def get_schedules_endpoint():
+    schedules = get_schedules()
+    
+    return jsonify(schedules), 200
+    
+
+@api.route("/removeSchedule", methods=["POST"])
+def remove_schedule_endpoint():
+    id: str = request.data.decode()
+    if id == None: 
+        return "No schedule id found", 400
+    
+    try:
+        remove_schedule(id)
+    except:
+        return "schedule not found (or other error)", 400
+    
+    return "ok", 200
+
+@api.route("/editSchedule", methods=["POST"])
+def edit_scheduled_endpoint():
+    body = request.get_json()
+    job_id: str = body["id"]
+    hour: str = body['hour']
+    minute: str = body['minute']
+    image_name: str = body['imageName']
+    days: List[bool] = body['days']
+    
+    if(job_id == None or hour == None or minute == None or image_name == None or days == None or len(days) != 7):
+        return "invalid parameters", 400
+
+    edit_schedule(job_id, hour, minute, image_name, days)
+    
+    return "", 200
+    
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
