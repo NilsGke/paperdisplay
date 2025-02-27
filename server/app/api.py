@@ -1,9 +1,10 @@
 import os
+from typing import List
 from flask import Blueprint, jsonify, make_response, request, send_from_directory
 from werkzeug.utils import secure_filename
 from app.config import IMAGES_DIR, CURRENT_IMAGE
 from app.display import set_image
-from app.scheduledImages import get_schedules, remove_schedule, schedule_image
+from app.scheduledImages import get_schedules, remove_schedule, schedule_image, edit_schedule
 
 api = Blueprint("api", __name__)
 
@@ -155,12 +156,13 @@ def add_schedule_endpoint():
     hour: str = body['hour']
     minute: str = body['minute']
     image_name: str = body['imageName']
+    days: List[bool] = body['days']
     
-    if(hour == None or minute == None or image_name == None):
+    if(hour == None or minute == None or image_name == None or days == None or len(days) != 7):
         return "invalid parameters", 400
     
     
-    schedule_image(hour, minute, image_name)
+    schedule_image(hour, minute, image_name, days)
     return "", 200
 
 @api.route("/getSchedules", methods=["GET"])
@@ -183,6 +185,22 @@ def remove_schedule_endpoint():
     
     return "ok", 200
 
+@api.route("/editSchedule", methods=["POST"])
+def edit_scheduled_endpoint():
+    body = request.get_json()
+    job_id: str = body["id"]
+    hour: str = body['hour']
+    minute: str = body['minute']
+    image_name: str = body['imageName']
+    days: List[bool] = body['days']
+    
+    if(job_id == None or hour == None or minute == None or image_name == None or days == None or len(days) != 7):
+        return "invalid parameters", 400
+
+    edit_schedule(job_id, hour, minute, image_name, days)
+    
+    return "", 200
+    
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
