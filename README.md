@@ -1,4 +1,6 @@
 # paperdisplay
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FNilsGke%2Fpaperdisplay.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FNilsGke%2Fpaperdisplay?ref=badge_shield)
+
 
 ## how does it work
 
@@ -138,3 +140,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FNilsGke%2Fpaperdisplay.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FNilsGke%2Fpaperdisplay?ref=badge_large)
