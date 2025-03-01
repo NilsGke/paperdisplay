@@ -36,6 +36,16 @@ print(os.getcwd())
 def get_filenames():
     try:
         images = os.listdir(IMAGES_DIR)
+        for image in images:
+            allowed = False
+            for extension in ALLOWED_EXTENSIONS:
+                if image.endswith(extension):
+                    allowed = True
+                    break
+            if not allowed:
+                images.remove(image)
+                
+                
         return jsonify(images), 200
     except FileNotFoundError:
         return jsonify({"error": "Images directory not found"}), 404
