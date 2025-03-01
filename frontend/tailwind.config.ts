@@ -1,4 +1,11 @@
-/** @type {import('tailwindcss').Config} */
+import tailwindAnimate from "tailwindcss-animate";
+import type { Config } from "tailwindcss";
+import { ansiColors } from "./src/helpers/ansiToHtml";
+
+const safelist: Config["safelist"] = Object.values(ansiColors)
+  .map((s) => s.split(" "))
+  .flat();
+
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
@@ -53,5 +60,6 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindAnimate],
+  safelist,
 };

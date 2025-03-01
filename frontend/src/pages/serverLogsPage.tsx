@@ -1,5 +1,6 @@
 import Spinner from "@/components/Spinner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ansiToHtml from "@/helpers/ansiToHtml";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ServerLogsPage() {
@@ -12,8 +13,11 @@ export default function ServerLogsPage() {
     queryKey: ["logs"],
     queryFn: async () => {
       const res = await fetch("/api/logs");
-      if (res.ok) return res.text();
-      else throw Error(res.statusText);
+      if (res.body === null) throw Error("response body is null");
+      if (!res.ok) throw Error(res.statusText);
+
+      const text = await res.text();
+      return ansiToHtml(text);
     },
     retry: (failureCount) => failureCount < 3,
     refetchInterval: 2000,
@@ -29,12 +33,14 @@ export default function ServerLogsPage() {
         </CardHeader>
         <CardContent className="h-full max-h-[75vh] overflow-scroll scroll-smooth flex flex-col-reverse">
           {error && (
-            <pre className="text-red-400 dark:text-red-700">
-              {error.message}
-            </pre>
+            <pre className="text-red-400 dark:text-red-700">{logs}</pre>
           )}
           <div className="h-full max-h-full">
-            <pre className="text-sm">{logs}</pre>
+            <pre
+              dangerouslySetInnerHTML={
+                logs !== undefined ? { __html: logs } : undefined
+              }
+            />
           </div>
         </CardContent>
       </Card>
