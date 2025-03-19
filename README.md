@@ -1,8 +1,11 @@
 # paperdisplay
 
-Homepage             |  Quicktext | Schedules
-:-------------------------:|:-------------------------:|:-----------:
-<img width="1920" alt="image" src="https://github.com/user-attachments/assets/529b33dd-21ad-4113-8910-cbea08240c2a" /> |  <img width="1920" alt="image" src="https://github.com/user-attachments/assets/c960b853-a9ea-49d3-b25c-b59512c8058f" /> | <img width="1920" alt="image" src="https://github.com/user-attachments/assets/e57cf44e-d2a4-4858-8cbd-28665d3f60a6" />
+Homepage             |  Quicktext 
+:-------------------------:|:-------------------------:
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/529b33dd-21ad-4113-8910-cbea08240c2a" /> |  <img width="1920" alt="image" src="https://github.com/user-attachments/assets/c960b853-a9ea-49d3-b25c-b59512c8058f" /> 
+Schedules | 3d printed Frame
+<img width="1920" alt="image" src="https://github.com/user-attachments/assets/e57cf44e-d2a4-4858-8cbd-28665d3f60a6" /> | ![paperdisplay-gh](https://github.com/user-attachments/assets/c0117329-2d64-44b1-a6ff-58edb9cf613a)
+
 
 
 
