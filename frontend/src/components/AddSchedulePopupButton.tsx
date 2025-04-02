@@ -134,7 +134,7 @@ export default function AddSchedulePopupButton({
               const hour = time.getHours();
 
               createSchedule(
-                { minute, hour, imageName, days },
+                { minute, hour, imageName, days, enabled: true },
                 {
                   onSuccess: () => {
                     setOpen(false);
