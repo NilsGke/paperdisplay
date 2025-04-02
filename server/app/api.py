@@ -200,11 +200,12 @@ def edit_scheduled_endpoint():
     minute: str = body['minute']
     image_name: str = body['imageName']
     days: List[bool] = body['days']
+    enabled: bool = body['enabled']
     
-    if(job_id == None or hour == None or minute == None or image_name == None or days == None or len(days) != 7):
+    if(job_id == None or hour == None or minute == None or image_name == None or days == None or len(days) != 7 or enabled == None):
         return "invalid parameters", 400
 
-    edit_schedule(job_id, hour, minute, image_name, days)
+    edit_schedule(job_id, hour, minute, image_name, days, enabled)
     
     return "", 200
     

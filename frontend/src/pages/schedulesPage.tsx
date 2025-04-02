@@ -23,6 +23,7 @@ export type ScheduledImage = {
   minute: number;
   imageName: string;
   days: [boolean, boolean, boolean, boolean, boolean, boolean, boolean];
+  enabled: boolean;
 };
 
 export default function SchedulesPage() {
@@ -51,6 +52,7 @@ export default function SchedulesPage() {
       minute,
       imageName,
       days,
+      enabled,
     }: Omit<ScheduledImage, "id">) => {
       if (imageName === "") throw new Error("please select an image");
       if (hour === undefined || minute === undefined)
@@ -59,14 +61,12 @@ export default function SchedulesPage() {
       const res = await fetch("/api/addSchedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageName, hour, minute, days }),
+        body: JSON.stringify({ imageName, hour, minute, days, enabled }),
       });
 
       if (!res.ok) throw Error(res.statusText);
     },
-    onError: (error) => {
-      toast.error(error.message);
-    },
+    onError: (error) => toast.error(error.message),
     onSuccess: () => refetchSchedules(),
   });
 
@@ -77,6 +77,7 @@ export default function SchedulesPage() {
       minute,
       imageName,
       days,
+      enabled,
     }: ScheduledImage) => {
       if (imageName === "") throw new Error("please select an image");
       if (hour === undefined || minute === undefined)
@@ -85,7 +86,7 @@ export default function SchedulesPage() {
       const res = await fetch("/api/editSchedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, imageName, hour, minute, days }),
+        body: JSON.stringify({ id, imageName, hour, minute, days, enabled }),
       });
 
       if (!res.ok) throw Error(res.statusText);
@@ -106,9 +107,7 @@ export default function SchedulesPage() {
 
       if (!res.ok) throw Error(res.statusText);
     },
-    onError: (error) => {
-      toast.error(error.message);
-    },
+    onError: (error) => toast.error(error.message),
     onSuccess: () => refetchSchedules(),
   });
 
@@ -134,8 +133,13 @@ export default function SchedulesPage() {
             <TableBody ref={containerRef}>
               {schedules?.map((sched) => {
                 return (
-                  <TableRow key={sched.id}>
-                    <TableCell className="">
+                  <TableRow
+                    key={sched.id}
+                    className={cn({
+                      "[&>td]:opacity-30 line-through": !sched.enabled,
+                    })}
+                  >
+                    <TableCell>
                       <div className="flex items-center h-full gap-4 font-medium flex-nowrap">
                         <img
                           src={`/api/images/${sched.imageName}`}
@@ -165,7 +169,7 @@ export default function SchedulesPage() {
                         {sched.days.at(6) ? <DayChip day="Su" /> : <DayChip />}
                       </ul>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="!opacity-100">
                       <EditSchedulePopupButton
                         editScheduled={editScheduled}
                         removeScheduled={removeScheduled}

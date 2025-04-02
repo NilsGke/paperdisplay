@@ -19,6 +19,8 @@ import { env } from "@/env";
 import { cn } from "@/lib/utils";
 import type { ScheduledImage } from "@/pages/schedulesPage";
 import { toast } from "react-toastify";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 export default function EditSchedulePopupButton({
   initialScheduledImage,
@@ -44,6 +46,7 @@ export default function EditSchedulePopupButton({
   const [days, setDays] = useState<ScheduledImage["days"]>(
     initialScheduledImage.days
   );
+  const [enabled, setEnabled] = useState(initialScheduledImage.enabled);
 
   const [open, setOpen] = useState(false);
 
@@ -134,6 +137,23 @@ export default function EditSchedulePopupButton({
             <DayToggle value="sa">Sa</DayToggle>
             <DayToggle value="su">Su</DayToggle>
           </ToggleGroup>
+
+          <div className="rounded border px-4 py-2 flex justify-between items-center">
+            <div className="space-y-0.5">
+              <Label htmlFor="enabledToggle" className="font-bold">
+                Enabled
+              </Label>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                When disabled, schedule will not take effect
+              </p>
+            </div>
+
+            <Switch
+              id="enabledToggle"
+              checked={enabled}
+              onCheckedChange={setEnabled}
+            />
+          </div>
         </div>
 
         <DialogFooter className="w-full">
@@ -161,6 +181,7 @@ export default function EditSchedulePopupButton({
                       hour,
                       imageName,
                       days,
+                      enabled,
                     },
                     { onSuccess: () => setOpen(false) }
                   );

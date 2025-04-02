@@ -14,17 +14,18 @@ scheduler = BackgroundScheduler()
 scheduler.start()
 
 class Scheduled_Image:
-  def __init__(self, image_name: str, hour: int, minute: int, days: List[bool]):
+  def __init__(self, image_name: str, hour: int, minute: int, days: List[bool], enabled: bool):
     self.image_name = image_name
     self.hour = hour
     self.minute = minute
     self.days = days
     self.job: Job = scheduler.add_job(self.run, 'cron', hour=self.hour, minute=self.minute)
+    self.enabled = enabled
   
   
   def run(self):
     weekday = datetime.now().weekday()
-    should_run_today = self.days[weekday]
+    should_run_today = self.days[weekday] and self.enabled
     if(should_run_today):
       jsonResult, status = set_image(self.image_name)
       if(status == 200): 
@@ -50,26 +51,28 @@ class Scheduled_Image:
         self.days[4],
         self.days[5],
         self.days[6],
-      ]
+      ],
+      "enabled": self.enabled
     }
 
-  def edit(self, hour: int, minute: int, days: List[bool], image_name):
+  def edit(self, hour: int, minute: int, days: List[bool], image_name: str, enabled: bool):
     self.job.reschedule(trigger='cron', hour=hour, minute=minute)
     self.hour = hour
     self.minute = minute
     self.days = days
     self.image_name = image_name
+    self.enabled = enabled
 
 
 scheduled_images: List[Scheduled_Image] = []
 SCHEDULES_FILE = IMAGES_DIR + "/schedules.csv"
 
 
-def schedule_image(hour: int, minute: int, image_name: str, days: List[bool], write_to_file = True):
-  new_scheduled_image = Scheduled_Image(image_name, hour, minute, days);
+def schedule_image(hour: int, minute: int, image_name: str, days: List[bool], enabled = True, write_to_file = True):
+  new_scheduled_image = Scheduled_Image(image_name, hour, minute, days, enabled);
   scheduled_images.append(new_scheduled_image)
   if write_to_file: add_to_file(new_scheduled_image)
-  print(f"{colors.fg.yellow}ADDED schedule for {image_name} at {hour}:{minute} for days: monday={days[0]}, tuesday={days[1]}, wednesday={days[2]}, thursday={days[3]}, friday={days[4]}, saturday={days[5]}, sunday={days[6]}{colors.reset}")
+  print(f"{colors.fg.yellow}ADDED schedule for {image_name} at {hour}:{minute} for days: monday={days[0]}, tuesday={days[1]}, wednesday={days[2]}, thursday={days[3]}, friday={days[4]}, saturday={days[5]}, sunday={days[6]}, enabled={enabled}{colors.reset}")
 
 def get_schedules():
   serialized_scheduled = []
@@ -90,9 +93,9 @@ def remove_schedule(job_id: str):
   
   scheduled.remove()
   rewrite_file()
-  print(f"{colors.fg.yellow}REMOVED schedule for {scheduled.image_name} at {scheduled.hour}:{scheduled.minute} for days: monday={scheduled.days[0]}, tuesday={scheduled.days[1]}, wednesday={scheduled.days[2]}, thursday={scheduled.days[3]}, friday={scheduled.days[4]}, saturday={scheduled.days[5]}, sunday={scheduled.days[6]}{colors.reset}")
+  print(f"{colors.fg.yellow}REMOVED schedule for {scheduled.image_name} at {scheduled.hour}:{scheduled.minute} for days: monday={scheduled.days[0]}, tuesday={scheduled.days[1]}, wednesday={scheduled.days[2]}, thursday={scheduled.days[3]}, friday={scheduled.days[4]}, saturday={scheduled.days[5]}, sunday={scheduled.days[6]}, enabled={scheduled.enabled}{colors.reset}")
 
-def edit_schedule(job_id:str, hour: int, minute: int, image_name: str, days: List[bool]):
+def edit_schedule(job_id:str, hour: int, minute: int, image_name: str, days: List[bool], enabled: bool):
   scheduled: Scheduled_Image = None
   for s in scheduled_images:
     if(s.job.id == job_id):
@@ -101,10 +104,10 @@ def edit_schedule(job_id:str, hour: int, minute: int, image_name: str, days: Lis
     
   if(scheduled == None): raise Exception(f"job not found (job_id: {job_id})")
   
-  scheduled.edit(hour, minute, days, image_name)
+  scheduled.edit(hour, minute, days, image_name, enabled)
   
   rewrite_file()
-  print(f"{colors.fg.yellow}edited schedule for: {image_name} to {hour}:{minute} days: monday={days[0]}, tuesday={days[1]}, wednesday={days[2]}, thursday={days[3]}, friday={days[4]}, saturday={days[5]}, sunday={days[6]}{colors.reset}")
+  print(f"{colors.fg.yellow}edited schedule for: {image_name} to {hour}:{minute} days: monday={days[0]}, tuesday={days[1]}, wednesday={days[2]}, thursday={days[3]}, friday={days[4]}, saturday={days[5]}, sunday={days[6]}, enabled={enabled}{colors.reset}")
 
 
 def load_from_file():
@@ -114,7 +117,7 @@ def load_from_file():
     print(f"{colors.fg.green}created \"schedules.csv\"{colors.reset}")
     return
   
-  print(f"{colors.fg.cyan}loding schedules from file:")
+  print(f"{colors.fg.cyan}loading schedules from file:")
   with open(SCHEDULES_FILE, "r") as f:
     reader = csv.reader(f)
     for row in reader:
@@ -128,20 +131,21 @@ def load_from_file():
       fr = get_index_or_default(row, 7, "False") == "True"
       sa = get_index_or_default(row, 8, "False") == "True"
       su = get_index_or_default(row, 9, "False") == "True"
+      enabled = get_index_or_default(row, 10, "True") == "True"
       
       print("- ", end="")
-      schedule_image(hour, minute, image_name, [mo, tu, we, th, fr, sa, su], write_to_file=False)
-  print(f"one loading from file{colors.reset}\n")
+      schedule_image(hour, minute, image_name, [mo, tu, we, th, fr, sa, su], enabled, write_to_file=False)
+  print(f"done loading from file{colors.reset}\n")
 
 def add_to_file(s: Scheduled_Image):
   with open(SCHEDULES_FILE, "a") as file: 
     writer = csv.writer(file)
-    writer.writerow([s.hour, s.minute, s.image_name, *s.days])
+    writer.writerow([s.hour, s.minute, s.image_name, *s.days, s.enabled])
 
 def rewrite_file():
   rows = []
   for s in scheduled_images:
-    rows.append([s.hour, s.minute, s.image_name, *s.days])
+    rows.append([s.hour, s.minute, s.image_name, *s.days, s.enabled])
 
   # And then use the following to create the csv file:
   with open(SCHEDULES_FILE, 'w', newline='') as file:
