@@ -16,6 +16,7 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import EditSchedulePopupButton from "@/components/EditSchedulePopupButton";
 import { env } from "@/env";
+import { Switch } from "@/components/ui/switch";
 
 export type ScheduledImage = {
   id: string;
@@ -27,7 +28,11 @@ export type ScheduledImage = {
 };
 
 export default function SchedulesPage() {
-  const { data: schedules, refetch: refetchSchedules } = useQuery({
+  const {
+    data: schedules,
+    refetch: refetchSchedules,
+    isPending: queryIsPending,
+  } = useQuery({
     queryKey: ["schedules"],
     queryFn: async () => {
       const res = await fetch("/api/getSchedules");
@@ -70,32 +75,33 @@ export default function SchedulesPage() {
     onSuccess: () => refetchSchedules(),
   });
 
-  const { mutate: editScheduled } = useMutation({
-    mutationFn: async ({
-      id,
-      hour,
-      minute,
-      imageName,
-      days,
-      enabled,
-    }: ScheduledImage) => {
-      if (imageName === "") throw new Error("please select an image");
-      if (hour === undefined || minute === undefined)
-        throw new Error("please enter a time");
+  const { mutate: editScheduled, isPending: editMutationIsPending } =
+    useMutation({
+      mutationFn: async ({
+        id,
+        hour,
+        minute,
+        imageName,
+        days,
+        enabled,
+      }: ScheduledImage) => {
+        if (imageName === "") throw new Error("please select an image");
+        if (hour === undefined || minute === undefined)
+          throw new Error("please enter a time");
 
-      const res = await fetch("/api/editSchedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, imageName, hour, minute, days, enabled }),
-      });
+        const res = await fetch("/api/editSchedule", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, imageName, hour, minute, days, enabled }),
+        });
 
-      if (!res.ok) throw Error(res.statusText);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-    onSuccess: () => refetchSchedules(),
-  });
+        if (!res.ok) throw Error(res.statusText);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => refetchSchedules(),
+    });
 
   const { mutate: removeScheduled } = useMutation({
     mutationFn: async ({ id }: Pick<ScheduledImage, "id">) => {
@@ -122,7 +128,8 @@ export default function SchedulesPage() {
         <CardContent className="grid grid-rows-[repeat(auto,2] gap-4">
           <Table>
             <TableHeader>
-              <TableRow className="">
+              <TableRow>
+                <TableHead className="text-center">Enabled</TableHead>
                 <TableHead className="text-center min-w-40">Image</TableHead>
                 <TableHead className="text-center min-w-40">Time</TableHead>
                 <TableHead className="text-center min-w-40">Days</TableHead>
@@ -139,6 +146,20 @@ export default function SchedulesPage() {
                       "[&>td]:opacity-30 line-through": !sched.enabled,
                     })}
                   >
+                    <TableCell>
+                      <div className="flex items-center justify-center size-full">
+                        <Switch
+                          disabled={queryIsPending || editMutationIsPending}
+                          checked={sched.enabled}
+                          onCheckedChange={() =>
+                            editScheduled({
+                              ...sched,
+                              enabled: !sched.enabled,
+                            })
+                          }
+                        />
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center h-full gap-4 font-medium flex-nowrap">
                         <img
