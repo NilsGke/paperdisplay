@@ -1,5 +1,7 @@
 # paperdisplay
 
+Paperdisplay is a frontend and backend for controlling a e-ink display. You can upload images and store images, create your own and schedule specific images to be shown at a certain time on certain days.
+
 Homepage             |  Quicktext 
 :-------------------------:|:-------------------------:
 <img width="1920" alt="image" src="https://github.com/user-attachments/assets/529b33dd-21ad-4113-8910-cbea08240c2a" /> |  <img width="1920" alt="image" src="https://github.com/user-attachments/assets/c960b853-a9ea-49d3-b25c-b59512c8058f" /> 
