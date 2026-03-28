@@ -1,3 +1,4 @@
+import SystemFontPicker from "@/components/SystemFontPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -34,10 +35,11 @@ import {
   TransparencyGridIcon,
 } from "@radix-ui/react-icons";
 import { useMutation } from "@tanstack/react-query";
+import { FolderOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
-const fonts = [
+const BROWSER_FONTS = [
   "Arial",
   "Verdana",
   "Tahoma",
@@ -55,7 +57,10 @@ export default function QuickTextPage() {
   const [invert, setInvert] = useState(false);
   const [bold, setBold] = useState(false);
   const [dithering, setDithering] = useState(false);
-  const [font, setFont] = useState<(typeof fonts)[number]>("Arial");
+  const [browserFont, setBrowserFont] = useState<
+    (typeof BROWSER_FONTS)[number] | "SYSTEM_FONT"
+  >("Arial");
+  const [systemFont, setSystemFont] = useState<string | null>(null);
 
   // preview on save
   const [loadPreview, setLoadPreview] = useState(false);
@@ -73,7 +78,7 @@ export default function QuickTextPage() {
         throw new Error("could not get canvas");
       }
       const blob = await new Promise<Blob | null>((r) =>
-        canvasRef.current!.toBlob(r)
+        canvasRef.current!.toBlob(r),
       );
       if (blob === null) {
         toast.error("could not make blob out of canvas");
@@ -90,7 +95,7 @@ export default function QuickTextPage() {
           // necessary because here we can change the filename
           type: file.type,
           lastModified: file.lastModified,
-        })
+        }),
       );
       data.append("user", "hubot");
       return fetch("/api/addImage", {
@@ -141,6 +146,7 @@ export default function QuickTextPage() {
     let lineHeight = 10;
 
     // Adjust font size dynamically
+    const font = browserFont === "SYSTEM_FONT" ? systemFont : browserFont;
     while (fontSize > minFontSize) {
       context.font = `${bold ? "bold " : ""}${fontSize}px ${font}`;
       lineHeight = fontSize * lineHeightRatio;
@@ -185,7 +191,7 @@ export default function QuickTextPage() {
       const dithered = monochrome(imageData, 0.5, "floydsteinberg");
       context.putImageData(dithered, 0, 0);
     }
-  }, [invert, text, dithering, font, bold]);
+  }, [invert, text, dithering, browserFont, systemFont, bold]);
 
   const { mutate } = useMutation({
     mutationFn: async (file: File) => {
@@ -232,7 +238,7 @@ export default function QuickTextPage() {
 
   return (
     <div className="grid p-4 size-full place-items-center">
-      <Card className="max-w-xl">
+      <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle>Quick Text</CardTitle>
         </CardHeader>
@@ -247,14 +253,16 @@ export default function QuickTextPage() {
             />
             <div className="flex gap-2">
               <Select
-                value={font}
-                onValueChange={(newFont: typeof font) => setFont(newFont)}
+                value={browserFont}
+                onValueChange={(newFont: typeof browserFont) =>
+                  setBrowserFont(newFont)
+                }
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Theme" />
                 </SelectTrigger>
                 <SelectContent>
-                  {fonts.map((font) => (
+                  {BROWSER_FONTS.map((font) => (
                     <SelectItem
                       key={font}
                       value={font}
@@ -265,8 +273,21 @@ export default function QuickTextPage() {
                       {font}
                     </SelectItem>
                   ))}
+                  <SelectItem value="SYSTEM_FONT">
+                    <div className="flex gap-2 items-center">
+                      <FolderOpen className="size-4" /> System Fonts
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+
+              {browserFont === "SYSTEM_FONT" && (
+                <SystemFontPicker
+                  selectedSystemFont={systemFont}
+                  setSelectedSystemFont={(font) => setSystemFont(font)}
+                />
+              )}
+
               <ToggleGroup
                 orientation="horizontal"
                 variant="outline"
@@ -278,7 +299,7 @@ export default function QuickTextPage() {
                   bold ? "bold" : undefined,
                 ].filter((s) => s !== undefined)}
                 onValueChange={(
-                  selected: ("invert" | "dithering" | "bold")[]
+                  selected: ("invert" | "dithering" | "bold")[],
                 ) => {
                   setInvert(selected.includes("invert"));
                   setDithering(selected.includes("dithering"));
