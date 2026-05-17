@@ -27,6 +27,6 @@ app.register_blueprint(static, url_prefix="")
 if __name__ == "__main__":
     # host = os.getenv("VITE_HOST", "127.0.0.1")
     # port = int(os.getenv("VITE_PORT", 8080))
-    host = "paperdisplay.local"
+    host = "127.0.0.1"
     port = 8080
     app.run(host=host, port=port)
